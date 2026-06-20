@@ -71,7 +71,7 @@ class SqlAlchemyBusinessRepository(BusinessRepositoryPort):
         if model is None:
             return None
         return business_model_to_domain(model)
-    
+
     async def find_by_owner_and_name(
         self,
         owner_id: str,
