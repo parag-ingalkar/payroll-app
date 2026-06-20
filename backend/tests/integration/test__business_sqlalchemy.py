@@ -21,9 +21,9 @@ from app.business.application.use_cases import (
 
 
 @pytest.mark.asyncio
-async def test__create_and_get_business_integration(sqlalchemy_business_uow):
-    create_uc = CreateBusinessUseCase(sqlalchemy_business_uow)
-    get_uc = GetBusinessUseCase(sqlalchemy_business_uow)
+async def test__create_and_get_business_integration(sqlalchemy_uow):
+    create_uc = CreateBusinessUseCase(sqlalchemy_uow)
+    get_uc = GetBusinessUseCase(sqlalchemy_uow)
 
     cmd = CreateBusinessCommand(
         owner_id="owner-int-1",
@@ -51,10 +51,10 @@ async def test__create_and_get_business_integration(sqlalchemy_business_uow):
 
 
 @pytest.mark.asyncio
-async def test__update_business_integration(sqlalchemy_business_uow):
-    create_uc = CreateBusinessUseCase(sqlalchemy_business_uow)
-    update_uc = UpdateBusinessUseCase(sqlalchemy_business_uow)
-    get_uc = GetBusinessUseCase(sqlalchemy_business_uow)
+async def test__update_business_integration(sqlalchemy_uow):
+    create_uc = CreateBusinessUseCase(sqlalchemy_uow)
+    update_uc = UpdateBusinessUseCase(sqlalchemy_uow)
+    get_uc = GetBusinessUseCase(sqlalchemy_uow)
 
     # create
     created = await create_uc.execute(
@@ -88,10 +88,10 @@ async def test__update_business_integration(sqlalchemy_business_uow):
 
 
 @pytest.mark.asyncio
-async def test__replace_business_weekly_off_rules_integration(sqlalchemy_business_uow):
-    create_uc = CreateBusinessUseCase(sqlalchemy_business_uow)
-    replace_weekly_off_rules_uc = ReplaceWeeklyOffRulesUseCase(sqlalchemy_business_uow)
-    get_uc = GetBusinessUseCase(sqlalchemy_business_uow)
+async def test__replace_business_weekly_off_rules_integration(sqlalchemy_uow):
+    create_uc = CreateBusinessUseCase(sqlalchemy_uow)
+    replace_weekly_off_rules_uc = ReplaceWeeklyOffRulesUseCase(sqlalchemy_uow)
+    get_uc = GetBusinessUseCase(sqlalchemy_uow)
 
     create_cmd = CreateBusinessCommand(
         owner_id="owner-int-1",
@@ -131,10 +131,10 @@ async def test__replace_business_weekly_off_rules_integration(sqlalchemy_busines
 
 
 @pytest.mark.asyncio
-async def test__delete_business_integration(sqlalchemy_business_uow):
-    create_uc = CreateBusinessUseCase(sqlalchemy_business_uow)
-    delete_uc = DeleteBusinessUseCase(sqlalchemy_business_uow)
-    get_uc = GetBusinessUseCase(sqlalchemy_business_uow)
+async def test__delete_business_integration(sqlalchemy_uow):
+    create_uc = CreateBusinessUseCase(sqlalchemy_uow)
+    delete_uc = DeleteBusinessUseCase(sqlalchemy_uow)
+    get_uc = GetBusinessUseCase(sqlalchemy_uow)
 
     created = await create_uc.execute(
         CreateBusinessCommand(
@@ -155,8 +155,8 @@ async def test__delete_business_integration(sqlalchemy_business_uow):
 
 
 @pytest.mark.asyncio
-async def test__cannot_create_duplicate_business_integration(sqlalchemy_business_uow):
-    create_uc = CreateBusinessUseCase(sqlalchemy_business_uow)
+async def test__cannot_create_duplicate_business_integration(sqlalchemy_uow):
+    create_uc = CreateBusinessUseCase(sqlalchemy_uow)
 
     await create_uc.execute(
         CreateBusinessCommand(

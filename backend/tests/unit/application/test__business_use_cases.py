@@ -28,10 +28,10 @@ from app.business.application.use_cases import (
 @pytest.mark.asyncio
 async def test__create_business_happy_path(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = CreateBusinessUseCase(in_memory_business_uow)
+    use_case = CreateBusinessUseCase(in_memory_uow)
 
     weekly_off_rules = [
         WeeklyOffRuleInput(weekday=Weekday.MONDAY, week_of_month=None),
@@ -55,17 +55,17 @@ async def test__create_business_happy_path(
     assert business.id is not None
     assert business.owner_id == business_defaults["owner_id"]
     assert business.name == "New Business"
-    assert in_memory_business_uow.committed is True
+    assert in_memory_uow.committed is True
     assert len(in_memory_business_repo._items) == 2
 
 
 @pytest.mark.asyncio
 async def test__create_business_duplicate_name_raises_error(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = CreateBusinessUseCase(in_memory_business_uow)
+    use_case = CreateBusinessUseCase(in_memory_uow)
 
     cmd = CreateBusinessCommand(
         owner_id=business_defaults["owner_id"],
@@ -82,17 +82,17 @@ async def test__create_business_duplicate_name_raises_error(
     with pytest.raises(DuplicateBusinessError):
         await use_case.execute(cmd)
 
-    assert in_memory_business_uow.committed is False
+    assert in_memory_uow.committed is False
     assert len(in_memory_business_repo._items) == 1
 
 
 @pytest.mark.asyncio
 async def test__update_business_happy_path(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = UpdateBusinessUseCase(in_memory_business_uow)
+    use_case = UpdateBusinessUseCase(in_memory_uow)
 
     cmd = UpdateBusinessCommand(
         business_id=in_memory_business_repo._items[0].id,
@@ -111,16 +111,16 @@ async def test__update_business_happy_path(
     assert business.default_working_hours_per_day == Decimal("7.5")
     assert business.default_overtime_multiplier == Decimal("1.75")
     assert business.payroll_start_day == 15
-    assert in_memory_business_uow.committed is True
+    assert in_memory_uow.committed is True
     assert len(in_memory_business_repo._items) == 1
 
 
 @pytest.mark.asyncio
 async def test__update_business_not_found_raises_error(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
 ):
-    use_case = UpdateBusinessUseCase(in_memory_business_uow)
+    use_case = UpdateBusinessUseCase(in_memory_uow)
 
     cmd = UpdateBusinessCommand(
         business_id=uuid4(),
@@ -135,16 +135,16 @@ async def test__update_business_not_found_raises_error(
     with pytest.raises(BusinessNotFoundError):
         await use_case.execute(cmd)
 
-    assert in_memory_business_uow.committed is False
+    assert in_memory_uow.committed is False
 
 
 @pytest.mark.asyncio
 async def test__update_business_not_by_owner_raises_error(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = UpdateBusinessUseCase(in_memory_business_uow)
+    use_case = UpdateBusinessUseCase(in_memory_uow)
 
     cmd = UpdateBusinessCommand(
         business_id=in_memory_business_repo._items[0].id,
@@ -159,16 +159,16 @@ async def test__update_business_not_by_owner_raises_error(
     with pytest.raises(BusinessNotFoundError):
         await use_case.execute(cmd)
 
-    assert in_memory_business_uow.committed is False
+    assert in_memory_uow.committed is False
 
 
 @pytest.mark.asyncio
 async def test__get_business_happy_path(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = GetBusinessUseCase(in_memory_business_uow)
+    use_case = GetBusinessUseCase(in_memory_uow)
 
     business = await use_case.execute(
         business_id=in_memory_business_repo._items[0].id,
@@ -183,9 +183,9 @@ async def test__get_business_happy_path(
 @pytest.mark.asyncio
 async def test__get_business_not_found_raises_error(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
 ):
-    use_case = GetBusinessUseCase(in_memory_business_uow)
+    use_case = GetBusinessUseCase(in_memory_uow)
 
     with pytest.raises(BusinessNotFoundError):
         await use_case.execute(
@@ -196,43 +196,43 @@ async def test__get_business_not_found_raises_error(
 @pytest.mark.asyncio
 async def test__delete_business_happy_path(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = DeleteBusinessUseCase(in_memory_business_uow)
+    use_case = DeleteBusinessUseCase(in_memory_uow)
 
     await use_case.execute(
         business_id=in_memory_business_repo._items[0].id,
         owner_id=business_defaults["owner_id"],
     )
 
-    assert in_memory_business_uow.committed is True
+    assert in_memory_uow.committed is True
     assert len(in_memory_business_repo._items) == 0
 
 
 @pytest.mark.asyncio
 async def test__delete_business_not_found_raises_error(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
 ):
-    use_case = DeleteBusinessUseCase(in_memory_business_uow)
+    use_case = DeleteBusinessUseCase(in_memory_uow)
 
     with pytest.raises(BusinessNotFoundError):
         await use_case.execute(
             business_id=uuid4(), owner_id=business_defaults["owner_id"]
         )
 
-    assert in_memory_business_uow.committed is False
-    assert len(in_memory_business_uow.businesses._items) == 1
+    assert in_memory_uow.committed is False
+    assert len(in_memory_uow.businesses._items) == 1
 
 
 @pytest.mark.asyncio
 async def test__delete_business_not_by_owner_raises_error(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = DeleteBusinessUseCase(in_memory_business_uow)
+    use_case = DeleteBusinessUseCase(in_memory_uow)
 
     with pytest.raises(BusinessNotFoundError):
         await use_case.execute(
@@ -240,17 +240,17 @@ async def test__delete_business_not_by_owner_raises_error(
             owner_id="some-other-owner",
         )
 
-    assert in_memory_business_uow.committed is False
-    assert len(in_memory_business_uow.businesses._items) == 1
+    assert in_memory_uow.committed is False
+    assert len(in_memory_uow.businesses._items) == 1
 
 
 @pytest.mark.asyncio
 async def test__get_weekly_off_rules_happy_path(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = GetWeeklyOffRulesUseCase(in_memory_business_uow)
+    use_case = GetWeeklyOffRulesUseCase(in_memory_uow)
 
     weekly_off_rules = await use_case.execute(
         business_id=in_memory_business_repo._items[0].id,
@@ -265,10 +265,10 @@ async def test__get_weekly_off_rules_happy_path(
 @pytest.mark.asyncio
 async def test__replace_weekly_off_rules_happy_path(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = ReplaceWeeklyOffRulesUseCase(in_memory_business_uow)
+    use_case = ReplaceWeeklyOffRulesUseCase(in_memory_uow)
 
     new_rules = [
         WeeklyOffRuleInput(weekday=Weekday.MONDAY, week_of_month=None),
@@ -291,10 +291,10 @@ async def test__replace_weekly_off_rules_happy_path(
 @pytest.mark.asyncio
 async def test__replace_weekly_off_rules_with_invalid_rules_raises_error(
     business_defaults,
-    in_memory_business_uow,
+    in_memory_uow,
     in_memory_business_repo,
 ):
-    use_case = ReplaceWeeklyOffRulesUseCase(in_memory_business_uow)
+    use_case = ReplaceWeeklyOffRulesUseCase(in_memory_uow)
 
     new_rules = [
         WeeklyOffRuleInput(weekday=Weekday.MONDAY, week_of_month=None),

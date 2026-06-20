@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import (
 
 from app.core.db import Base, get_session_factory
 from app.business.infrastructure.orm import BusinessModel, BusinessWeeklyOffRuleModel  # noqa: F401
-from app.business.infrastructure.uow import SqlAlchemyBusinessUnitOfWork
+from app.core.uow import SqlAlchemyUnitOfWork
 from app.main import app
 from app.business.domain.entities import WageType, WeeklyOffRule, Weekday
 
@@ -75,10 +75,10 @@ async def session_factory(
 
 
 @pytest.fixture
-async def sqlalchemy_business_uow(
+async def sqlalchemy_uow(
     session_factory: async_sessionmaker[AsyncSession],
-) -> SqlAlchemyBusinessUnitOfWork:
-    return SqlAlchemyBusinessUnitOfWork(session_factory)
+) -> SqlAlchemyUnitOfWork:
+    return SqlAlchemyUnitOfWork(session_factory)
 
 
 @pytest.fixture

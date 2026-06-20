@@ -8,8 +8,8 @@ from app.business.domain.entities import Business
 from app.business.domain.value_objects import normalize_business_name_for_lookup
 from app.business.application.ports import (
     BusinessRepositoryPort,
-    BusinessUnitOfWorkPort,
 )
+from app.core.uow import UnitOfWorkPort
 
 
 class InMemoryBusinessRepository(BusinessRepositoryPort):
@@ -61,12 +61,12 @@ class InMemoryBusinessRepository(BusinessRepositoryPort):
                 return
 
 
-class InMemoryBusinessUnitOfWork(BusinessUnitOfWorkPort):
+class InMemoryUnitOfWork(UnitOfWorkPort):
     def __init__(self, repo: InMemoryBusinessRepository) -> None:
         self.businesses = repo
         self.committed = False
 
-    async def __aenter__(self) -> "InMemoryBusinessUnitOfWork":
+    async def __aenter__(self) -> "InMemoryUnitOfWork":
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
@@ -86,7 +86,7 @@ def in_memory_business_repo(business_defaults) -> InMemoryBusinessRepository:
 
 
 @pytest.fixture
-def in_memory_business_uow(
+def in_memory_uow(
     in_memory_business_repo: InMemoryBusinessRepository,
-) -> InMemoryBusinessUnitOfWork:
-    return InMemoryBusinessUnitOfWork(in_memory_business_repo)
+) -> InMemoryUnitOfWork:
+    return InMemoryUnitOfWork(in_memory_business_repo)
