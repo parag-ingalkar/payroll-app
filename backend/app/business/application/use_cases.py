@@ -6,7 +6,7 @@ from app.business.application.commands import (
     UpdateBusinessCommand,
     ReplaceWeeklyOffRulesCommand,
 )
-from app.business.application.ports import BusinessUnitOfWorkPort
+from app.core.uow import UnitOfWorkPort
 from app.business.domain.entities import Business, WeeklyOffRule
 from app.business.domain.exceptions import (
     BusinessNotFoundError,
@@ -16,7 +16,7 @@ from app.business.domain.value_objects import normalize_business_name_for_lookup
 
 
 class CreateBusinessUseCase:
-    def __init__(self, uow: BusinessUnitOfWorkPort):
+    def __init__(self, uow: UnitOfWorkPort):
         self._uow = uow
 
     async def execute(self, cmd: CreateBusinessCommand) -> Business:
@@ -53,7 +53,7 @@ class CreateBusinessUseCase:
 
 
 class ListBusinessesUseCase:
-    def __init__(self, uow: BusinessUnitOfWorkPort) -> None:
+    def __init__(self, uow: UnitOfWorkPort) -> None:
         self._uow = uow
 
     async def execute(self, owner_id: str) -> Sequence[Business]:
@@ -64,7 +64,7 @@ class ListBusinessesUseCase:
 
 
 class GetBusinessUseCase:
-    def __init__(self, uow: BusinessUnitOfWorkPort) -> None:
+    def __init__(self, uow: UnitOfWorkPort) -> None:
         self._uow = uow
 
     async def execute(self, business_id: UUID, owner_id: str) -> Business:
@@ -80,7 +80,7 @@ class GetBusinessUseCase:
 
 
 class UpdateBusinessUseCase:
-    def __init__(self, uow: BusinessUnitOfWorkPort) -> None:
+    def __init__(self, uow: UnitOfWorkPort) -> None:
         self._uow = uow
 
     async def execute(self, cmd: UpdateBusinessCommand) -> Business:
@@ -118,7 +118,7 @@ class UpdateBusinessUseCase:
 
 
 class DeleteBusinessUseCase:
-    def __init__(self, uow: BusinessUnitOfWorkPort) -> None:
+    def __init__(self, uow: UnitOfWorkPort) -> None:
         self._uow = uow
 
     async def execute(self, business_id: UUID, owner_id: str) -> None:
@@ -137,7 +137,7 @@ class DeleteBusinessUseCase:
 
 
 class GetWeeklyOffRulesUseCase:
-    def __init__(self, uow: BusinessUnitOfWorkPort) -> None:
+    def __init__(self, uow: UnitOfWorkPort) -> None:
         self._uow = uow
 
     async def execute(self, business_id: UUID, owner_id: str) -> list[WeeklyOffRule]:
@@ -154,7 +154,7 @@ class GetWeeklyOffRulesUseCase:
 
 
 class ReplaceWeeklyOffRulesUseCase:
-    def __init__(self, uow: BusinessUnitOfWorkPort) -> None:
+    def __init__(self, uow: UnitOfWorkPort) -> None:
         self._uow = uow
 
     async def execute(self, cmd: ReplaceWeeklyOffRulesCommand) -> Business:

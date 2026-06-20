@@ -26,8 +26,6 @@ from app.business.presentation.schemas import (
     BusinessWeeklyOffRuleCreate,
 )
 from app.business.presentation.dependencies import (
-    CurrentPrincipal,
-    get_current_user,
     get_create_business_use_case,
     get_list_businesses_use_case,
     get_get_business_use_case,
@@ -36,7 +34,7 @@ from app.business.presentation.dependencies import (
     get_get_weekly_off_rules_use_case,
     get_replace_weekly_off_rules_use_case,
 )
-
+from app.core.dependencies import get_current_user, CurrentPrincipal
 
 router = APIRouter(prefix="/businesses", tags=["businesses"])
 
