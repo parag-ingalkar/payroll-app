@@ -9,7 +9,7 @@ os.environ["DATABASE_URL"] = (
 
 import pytest
 
-from httpx2 import ASGITransport, AsyncClient
+from httpx2 import ASGITransport, AsyncClient  # type: ignore
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,

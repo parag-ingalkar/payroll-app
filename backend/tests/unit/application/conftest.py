@@ -42,6 +42,15 @@ class InMemoryBusinessRepository(BusinessRepositoryPort):
                 return b
         return None
 
+    async def find_by_owner_and_name(self, owner_id: str, name: str) -> Business | None:
+        normalized_name = normalize_business_name_for_lookup(name)
+        for b in self._items:
+            if b.owner_id != owner_id:
+                continue
+            if normalize_business_name_for_lookup(b.name) == normalized_name:
+                return b
+        return None
+
     async def delete(self, business: Business) -> None:
         self._items = [b for b in self._items if b is not business]
 
