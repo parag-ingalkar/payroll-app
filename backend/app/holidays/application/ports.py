@@ -1,6 +1,7 @@
 from datetime import date
 from uuid import UUID
-from typing import Protocol, Sequence
+from typing import Protocol
+from collections.abc import Sequence
 
 from app.holidays.domain.entities import Holiday
 

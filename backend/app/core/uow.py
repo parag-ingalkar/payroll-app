@@ -6,10 +6,13 @@ from app.business.application.ports import (
     BusinessRepositoryPort,
 )
 from app.business.infrastructure.repositories import SqlAlchemyBusinessRepository
+from app.holidays.application.ports import HolidayRepositoryPort
+from app.holidays.infrastructure.repositories import SqlAlchemyHolidayRepository
 
 
 class UnitOfWorkPort(Protocol):
     businesses: BusinessRepositoryPort
+    holidays: HolidayRepositoryPort
 
     async def __aenter__(self) -> "UnitOfWorkPort": ...
 
@@ -25,10 +28,12 @@ class SqlAlchemyUnitOfWork(UnitOfWorkPort):
         self._session_factory = session_factory
         self.session: AsyncSession | None = None
         self.businesses: BusinessRepositoryPort
+        self.holidays: HolidayRepositoryPort
 
     async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
         self.session = self._session_factory()
         self.businesses = SqlAlchemyBusinessRepository(self.session)
+        self.holidays = SqlAlchemyHolidayRepository(self.session)
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
