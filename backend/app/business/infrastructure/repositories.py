@@ -98,7 +98,7 @@ class SqlAlchemyBusinessRepository(BusinessRepositoryPort):
         stmt = select(BusinessModel).where(BusinessModel.id == business.id)
         result = await self._session.execute(stmt)
         model = result.scalar_one_or_none()
-        if model is not None:
+        if model:
             await self._session.delete(model)
 
     async def update(self, business: Business) -> None:

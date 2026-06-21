@@ -1,4 +1,5 @@
-# app/business/infrastructure/orm.py
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from decimal import Decimal
 from uuid import uuid4, UUID
 
@@ -16,6 +17,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
 from app.business.domain.entities import WageType, Weekday
+
+if TYPE_CHECKING:
+    from app.holidays.infrastructure.orm import HolidayModel
 
 
 class BusinessModel(Base):
@@ -53,6 +57,12 @@ class BusinessModel(Base):
     )
 
     weekly_off_rules: Mapped[list["BusinessWeeklyOffRuleModel"]] = relationship(
+        back_populates="business",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    holidays: Mapped[list["HolidayModel"]] = relationship(
         back_populates="business",
         cascade="all, delete-orphan",
         passive_deletes=True,
