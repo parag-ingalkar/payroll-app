@@ -15,14 +15,14 @@ class Holiday:
 
     @classmethod
     def create(cls, business_id: UUID, date_: date, name: str | None) -> "Holiday":
-        if name:
-            normalized_name = normalize_whitespace(name)
-            if not normalized_name:
-                raise InvalidHolidayNameError(
-                    "Holiday name cannot be empty or whitespace."
-                )
+        if name is None:
+            normalized_name: str | None = None
         else:
-            normalized_name = None
+            normalized_name = normalize_whitespace(name)
+            # If after normalization it's empty, treat as "no name"
+            if not normalized_name:
+                normalized_name = None
+
         return cls(
             id=uuid4(),
             business_id=business_id,
@@ -32,8 +32,6 @@ class Holiday:
 
     def rename(self, new_name: str):
         normalized_name = normalize_whitespace(new_name)
-        if not normalized_name:
-            raise InvalidHolidayNameError("Holiday name cannot be empty or whitespace.")
         if normalized_name == self.name:
             raise InvalidHolidayNameError(
                 "New name must be different from the current name."
