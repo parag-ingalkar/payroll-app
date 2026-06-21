@@ -79,8 +79,12 @@ async def session_factory(
 @pytest.fixture
 async def sqlalchemy_uow(
     session_factory: async_sessionmaker[AsyncSession],
-) -> SqlAlchemyUnitOfWork:
-    return SqlAlchemyUnitOfWork(session_factory)
+) -> AsyncGenerator[SqlAlchemyUnitOfWork, None]:
+    uow = SqlAlchemyUnitOfWork(session_factory)
+    async with uow:
+        # __aenter__ runs here, .businesses and .holidays are set
+        yield uow
+    # __aexit__ runs automatically when the fixture scope ends
 
 
 @pytest.fixture
