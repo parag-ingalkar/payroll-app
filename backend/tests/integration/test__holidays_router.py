@@ -97,7 +97,9 @@ async def test__get_holiday_by_date_happy_path(api_client, business_defaults):
 
 
 @pytest.mark.asyncio
-async def test__get_holiday_by_date_not_found_returns_404(api_client, business_defaults):
+async def test__get_holiday_by_date_not_found_returns_404(
+    api_client, business_defaults
+):
     business_id = await _create_business_via_api(api_client, business_defaults)
 
     resp = await api_client.get(
@@ -147,7 +149,9 @@ async def test__update_holiday_clear_name_with_null(api_client, business_default
 
 
 @pytest.mark.asyncio
-async def test__update_holiday_without_fields_returns_400(api_client, business_defaults):
+async def test__update_holiday_without_fields_returns_400(
+    api_client, business_defaults
+):
     business_id = await _create_business_via_api(api_client, business_defaults)
 
     await api_client.post(
@@ -197,7 +201,9 @@ async def test__delete_holiday_happy_path(api_client, business_defaults):
 
 
 @pytest.mark.asyncio
-async def test__holiday_routes_respect_business_ownership(api_client, business_defaults):
+async def test__holiday_routes_respect_business_ownership(
+    api_client, business_defaults
+):
     """
     Ownership E2E:
     - Create a business for the current user.

@@ -10,7 +10,9 @@ app = FastAPI(title="Easy Payroll API")
 register_exception_handlers(app)
 
 app.include_router(business_router, prefix="/businesses", tags=["Businesses"])
-app.include_router(holidays_router, prefix="/businesses/{business_id}/holidays", tags=["Holidays"])
+app.include_router(
+    holidays_router, prefix="/businesses/{business_id}/holidays", tags=["Holidays"]
+)
 
 
 @app.get("/health")
