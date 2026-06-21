@@ -1,5 +1,5 @@
+# tests/integration/test__holidays_sqlalchemy.py
 from datetime import date
-from uuid import UUID
 
 import pytest
 
@@ -21,11 +21,19 @@ from app.holidays.application.use_cases import (
 
 
 @pytest.mark.asyncio
-async def test__create_holiday_with_valid_name(sqlalchemy_uow, add_business_in_db):
+async def test__create_holiday_with_valid_name(
+    sqlalchemy_uow,
+    add_business_in_db,
+    business_defaults,
+):
+    business = add_business_in_db
+    owner_id = business_defaults["owner_id"]
+
     create_uc = CreateHolidayUseCase(sqlalchemy_uow)
 
     cmd = CreateHolidayCommand(
-        business_id=UUID("12345678-1234-5678-1234-567812345678"),
+        business_id=business.id,
+        owner_id=owner_id,
         date=date(2026, 1, 1),
         name="New Year's Day",
     )
@@ -47,11 +55,19 @@ async def test__create_holiday_with_valid_name(sqlalchemy_uow, add_business_in_d
 
 
 @pytest.mark.asyncio
-async def test__create_holiday_with_empty_name(sqlalchemy_uow, add_business_in_db):
+async def test__create_holiday_with_empty_name(
+    sqlalchemy_uow,
+    add_business_in_db,
+    business_defaults,
+):
+    business = add_business_in_db
+    owner_id = business_defaults["owner_id"]
+
     create_uc = CreateHolidayUseCase(sqlalchemy_uow)
 
     cmd = CreateHolidayCommand(
-        business_id=UUID("12345678-1234-5678-1234-567812345678"),
+        business_id=business.id,
+        owner_id=owner_id,
         date=date(2026, 1, 1),
         name="   ",
     )
@@ -74,12 +90,19 @@ async def test__create_holiday_with_empty_name(sqlalchemy_uow, add_business_in_d
 
 @pytest.mark.asyncio
 async def test__rename_holiday_with_valid_name(
-    sqlalchemy_uow, add_business_and_holiday_in_db
+    sqlalchemy_uow,
+    add_business_and_holiday_in_db,
+    business_defaults,
 ):
+    # add_business_and_holiday_in_db already seeded a business + a holiday
+    owner_id = business_defaults["owner_id"]
+    business = (await sqlalchemy_uow.businesses.list_by_owner(owner_id))[0]
+
     rename_uc = RenameHolidayUseCase(sqlalchemy_uow)
 
     cmd = RenameHolidayCommand(
-        business_id=UUID("12345678-1234-5678-1234-567812345678"),
+        business_id=business.id,
+        owner_id=owner_id,
         date=date(2026, 1, 1),
         new_name="New Year's Celebration",
     )
@@ -101,16 +124,23 @@ async def test__rename_holiday_with_valid_name(
 
 
 @pytest.mark.asyncio
-async def test__list_holidays_by_month_use_case(sqlalchemy_uow, add_business_in_db):
+async def test__list_holidays_by_month_use_case(
+    sqlalchemy_uow,
+    add_business_in_db,
+    business_defaults,
+):
+    business = add_business_in_db
+    owner_id = business_defaults["owner_id"]
+
     # Add holidays for the same business in different months
     async with sqlalchemy_uow as uow:
         holiday1 = Holiday.create(
-            business_id=UUID("12345678-1234-5678-1234-567812345678"),
+            business_id=business.id,
             date_=date(2026, 1, 1),
             name="New Year's Day",
         )
         holiday2 = Holiday.create(
-            business_id=UUID("12345678-1234-5678-1234-567812345678"),
+            business_id=business.id,
             date_=date(2026, 2, 14),
             name="Valentine's Day",
         )
@@ -121,7 +151,8 @@ async def test__list_holidays_by_month_use_case(sqlalchemy_uow, add_business_in_
     list_uc = ListHolidaysUseCase(sqlalchemy_uow)
 
     cmd = ListHolidaysCommand(
-        business_id=UUID("12345678-1234-5678-1234-567812345678"),
+        business_id=business.id,
+        owner_id=owner_id,
         year=2026,
         month=2,
     )
@@ -134,28 +165,35 @@ async def test__list_holidays_by_month_use_case(sqlalchemy_uow, add_business_in_
 
 
 @pytest.mark.asyncio
-async def test__list_holidays_by_year_use_case(sqlalchemy_uow, add_business_in_db):
+async def test__list_holidays_by_year_use_case(
+    sqlalchemy_uow,
+    add_business_in_db,
+    business_defaults,
+):
+    business = add_business_in_db
+    owner_id = business_defaults["owner_id"]
+
     # Add holidays for the same business in different years
     async with sqlalchemy_uow as uow:
         holiday1 = Holiday.create(
-            business_id=UUID("12345678-1234-5678-1234-567812345678"),
+            business_id=business.id,
             date_=date(2026, 1, 1),
             name="New Year's Day",
         )
         holiday2 = Holiday.create(
-            business_id=UUID("12345678-1234-5678-1234-567812345678"),
+            business_id=business.id,
             date_=date(2027, 1, 1),
             name="New Year's Day",
         )
         await uow.holidays.add(holiday1)
         await uow.holidays.add(holiday2)
-
         await uow.commit()
 
     list_uc = ListHolidaysUseCase(sqlalchemy_uow)
 
     cmd = ListHolidaysCommand(
-        business_id=UUID("12345678-1234-5678-1234-567812345678"),
+        business_id=business.id,
+        owner_id=owner_id,
         year=2027,
         month=1,
     )
@@ -168,21 +206,28 @@ async def test__list_holidays_by_year_use_case(sqlalchemy_uow, add_business_in_d
 
 
 @pytest.mark.asyncio
-async def test__list_all_holidays_use_case(sqlalchemy_uow, add_business_in_db):
+async def test__list_all_holidays_use_case(
+    sqlalchemy_uow,
+    add_business_in_db,
+    business_defaults,
+):
+    business = add_business_in_db
+    owner_id = business_defaults["owner_id"]
+
     # Add holidays for the same business in different years and months
     async with sqlalchemy_uow as uow:
         holiday1 = Holiday.create(
-            business_id=UUID("12345678-1234-5678-1234-567812345678"),
+            business_id=business.id,
             date_=date(2026, 1, 1),
             name="New Year's Day",
         )
         holiday2 = Holiday.create(
-            business_id=UUID("12345678-1234-5678-1234-567812345678"),
+            business_id=business.id,
             date_=date(2027, 1, 1),
             name="New Year's Day",
         )
         holiday3 = Holiday.create(
-            business_id=UUID("12345678-1234-5678-1234-567812345678"),
+            business_id=business.id,
             date_=date(2027, 2, 14),
             name="Valentine's Day",
         )
@@ -194,7 +239,8 @@ async def test__list_all_holidays_use_case(sqlalchemy_uow, add_business_in_db):
     list_uc = ListHolidaysUseCase(sqlalchemy_uow)
 
     cmd = ListHolidaysCommand(
-        business_id=UUID("12345678-1234-5678-1234-567812345678"),
+        business_id=business.id,
+        owner_id=owner_id,
     )
 
     holidays = await list_uc.execute(cmd)
@@ -209,11 +255,19 @@ async def test__list_all_holidays_use_case(sqlalchemy_uow, add_business_in_db):
 
 
 @pytest.mark.asyncio
-async def test__delete_holiday(sqlalchemy_uow, add_business_and_holiday_in_db):
+async def test__delete_holiday(
+    sqlalchemy_uow,
+    add_business_and_holiday_in_db,
+    business_defaults,
+):
+    owner_id = business_defaults["owner_id"]
+    business = (await sqlalchemy_uow.businesses.list_by_owner(owner_id))[0]
+
     delete_uc = DeleteHolidayUseCase(sqlalchemy_uow)
 
     cmd = DeleteHolidayCommand(
-        business_id=UUID("12345678-1234-5678-1234-567812345678"),
+        business_id=business.id,
+        owner_id=owner_id,
         date=date(2026, 1, 1),
     )
 
@@ -222,7 +276,7 @@ async def test__delete_holiday(sqlalchemy_uow, add_business_and_holiday_in_db):
     # Assert DB state using a fresh UoW
     async with sqlalchemy_uow as uow:
         reloaded = await uow.holidays.get_by_business_and_date(
-            business_id=UUID("12345678-1234-5678-1234-567812345678"),
+            business_id=business.id,
             date_=date(2026, 1, 1),
         )
         assert reloaded is None
@@ -230,12 +284,18 @@ async def test__delete_holiday(sqlalchemy_uow, add_business_and_holiday_in_db):
 
 @pytest.mark.asyncio
 async def test__get_holiday_by_business_and_date(
-    sqlalchemy_uow, add_business_and_holiday_in_db
+    sqlalchemy_uow,
+    add_business_and_holiday_in_db,
+    business_defaults,
 ):
+    owner_id = business_defaults["owner_id"]
+    business = (await sqlalchemy_uow.businesses.list_by_owner(owner_id))[0]
+
     get_uc = GetHolidayByDateUseCase(sqlalchemy_uow)
 
     cmd = GetHolidayByDateCommand(
-        business_id=UUID("12345678-1234-5678-1234-567812345678"),
+        business_id=business.id,
+        owner_id=owner_id,
         date=date(2026, 1, 1),
     )
 

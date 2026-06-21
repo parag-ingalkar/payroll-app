@@ -1,15 +1,13 @@
-# tests/application_conftest.py
+# tests/unit/application/conftest.py
 from collections.abc import Sequence
 from datetime import date
 from uuid import UUID, uuid4
 
 import pytest
 
+from app.business.application.ports import BusinessRepositoryPort
 from app.business.domain.entities import Business
 from app.business.domain.value_objects import normalize_business_name_for_lookup
-from app.business.application.ports import (
-    BusinessRepositoryPort,
-)
 from app.core.uow import UnitOfWorkPort
 from app.holidays.application.ports import HolidayRepositoryPort
 from app.holidays.domain.entities import Holiday
@@ -151,8 +149,17 @@ def in_memory_business_repo(business_defaults) -> InMemoryBusinessRepository:
 
 
 @pytest.fixture
-def in_memory_holiday_repo(holiday_defaults) -> InMemoryHolidayRepository:
-    holiday = Holiday.create(**holiday_defaults)
+def in_memory_holiday_repo(
+    in_memory_business_repo: InMemoryBusinessRepository,
+) -> InMemoryHolidayRepository:
+    # Use the same business id as the seeded business
+    business = in_memory_business_repo._items[0]
+
+    holiday = Holiday.create(
+        business_id=business.id,
+        date_=date(2026, 1, 1),
+        name="New Year's Day",
+    )
     return InMemoryHolidayRepository(items=[holiday])
 
 
@@ -162,5 +169,6 @@ def in_memory_uow(
     in_memory_holiday_repo: InMemoryHolidayRepository,
 ) -> InMemoryUnitOfWork:
     return InMemoryUnitOfWork(
-        business_repo=in_memory_business_repo, holiday_repo=in_memory_holiday_repo
+        business_repo=in_memory_business_repo,
+        holiday_repo=in_memory_holiday_repo,
     )
