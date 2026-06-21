@@ -1,5 +1,6 @@
 # tests/application_conftest.py
 from collections.abc import Sequence
+from datetime import date
 from uuid import UUID, uuid4
 
 import pytest
@@ -10,6 +11,8 @@ from app.business.application.ports import (
     BusinessRepositoryPort,
 )
 from app.core.uow import UnitOfWorkPort
+from app.holidays.application.ports import HolidayRepositoryPort
+from app.holidays.domain.entities import Holiday
 
 
 class InMemoryBusinessRepository(BusinessRepositoryPort):
@@ -61,9 +64,71 @@ class InMemoryBusinessRepository(BusinessRepositoryPort):
                 return
 
 
+class InMemoryHolidayRepository(HolidayRepositoryPort):
+    def __init__(self, items: list[Holiday] | None = None) -> None:
+        self._items: list[Holiday] = list(items or [])
+
+    async def add(self, holiday: Holiday) -> None:
+        if holiday.id is None:
+            holiday.id = uuid4()
+        self._items.append(holiday)
+
+    async def get_by_business_and_date(
+        self, business_id: UUID, date_: date
+    ) -> Holiday | None:
+        return next(
+            (
+                h
+                for h in self._items
+                if h.business_id == business_id and h.date == date_
+            ),
+            None,
+        )
+
+    async def get_by_business_and_id(
+        self, business_id: UUID, holiday_id: UUID
+    ) -> Holiday | None:
+        return next(
+            (
+                h
+                for h in self._items
+                if h.business_id == business_id and h.id == holiday_id
+            ),
+            None,
+        )
+
+    async def list_by_business(
+        self, business_id: UUID, year: int | None = None, month: int | None = None
+    ) -> Sequence[Holiday]:
+        result = [h for h in self._items if h.business_id == business_id]
+        if year is not None:
+            result = [h for h in result if h.date.year == year]
+        if month is not None:
+            result = [h for h in result if h.date.month == month]
+        return result
+
+    async def delete_by_business_and_date(self, business_id: UUID, date_: date) -> None:
+        self._items = [
+            h
+            for h in self._items
+            if not (h.business_id == business_id and h.date == date_)
+        ]
+
+    async def update(self, holiday: Holiday) -> None:
+        for idx, h in enumerate(self._items):
+            if h.id == holiday.id and h.business_id == holiday.business_id:
+                self._items[idx] = holiday
+                return
+
+
 class InMemoryUnitOfWork(UnitOfWorkPort):
-    def __init__(self, repo: InMemoryBusinessRepository) -> None:
-        self.businesses = repo
+    def __init__(
+        self,
+        business_repo: InMemoryBusinessRepository,
+        holiday_repo: InMemoryHolidayRepository,
+    ) -> None:
+        self.businesses = business_repo
+        self.holidays = holiday_repo
         self.committed = False
 
     async def __aenter__(self) -> "InMemoryUnitOfWork":
@@ -86,7 +151,16 @@ def in_memory_business_repo(business_defaults) -> InMemoryBusinessRepository:
 
 
 @pytest.fixture
+def in_memory_holiday_repo(holiday_defaults) -> InMemoryHolidayRepository:
+    holiday = Holiday.create(**holiday_defaults)
+    return InMemoryHolidayRepository(items=[holiday])
+
+
+@pytest.fixture
 def in_memory_uow(
     in_memory_business_repo: InMemoryBusinessRepository,
+    in_memory_holiday_repo: InMemoryHolidayRepository,
 ) -> InMemoryUnitOfWork:
-    return InMemoryUnitOfWork(in_memory_business_repo)
+    return InMemoryUnitOfWork(
+        business_repo=in_memory_business_repo, holiday_repo=in_memory_holiday_repo
+    )

@@ -1,5 +1,7 @@
 # tests/integration/conftest.py
+from datetime import date
 import os
+from uuid import UUID
 from collections.abc import AsyncGenerator
 from decimal import Decimal
 
@@ -129,4 +131,13 @@ def business_defaults() -> dict:
             WeeklyOffRule(weekday=Weekday.MONDAY, week_of_month=None),
             WeeklyOffRule(weekday=Weekday.TUESDAY, week_of_month=2),
         ],
+    }
+
+
+@pytest.fixture
+def holiday_defaults():
+    return {
+        "business_id": UUID("12345678-1234-5678-1234-567812345678"),
+        "date_": date(2026, 1, 1),
+        "name": "New Year's Day",
     }
