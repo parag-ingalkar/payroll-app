@@ -36,7 +36,7 @@ from app.business.presentation.dependencies import (
 )
 from app.core.dependencies import get_current_user, CurrentPrincipal
 
-router = APIRouter(prefix="/businesses", tags=["businesses"])
+router = APIRouter()
 
 
 @router.post(

@@ -14,6 +14,7 @@ from app.holidays.application.commands import (
     ListHolidaysCommand,
     RenameHolidayCommand,
 )
+from app.business.domain.exceptions import BusinessNotFoundError
 
 
 @dataclass
@@ -22,6 +23,16 @@ class CreateHolidayUseCase:
 
     async def execute(self, cmd: CreateHolidayCommand) -> Holiday:
         async with self.uow as uow:
+            # Business ownership check
+            business = await uow.businesses.get_by_id_and_owner(
+                business_id=cmd.business_id, owner_id=cmd.owner_id
+            )
+            if not business:
+                raise BusinessNotFoundError(
+                    f"Business with id {cmd.business_id} not found for owner {cmd.owner_id}."
+                )
+
+            # Proceed with holiday creation
             holiday = await uow.holidays.get_by_business_and_date(
                 business_id=cmd.business_id, date_=cmd.date
             )
@@ -47,6 +58,15 @@ class ListHolidaysUseCase:
 
     async def execute(self, cmd: ListHolidaysCommand) -> Sequence[Holiday]:
         async with self.uow as uow:
+            # Business ownership check
+            business = await uow.businesses.get_by_id_and_owner(
+                business_id=cmd.business_id, owner_id=cmd.owner_id
+            )
+            if not business:
+                raise BusinessNotFoundError(
+                    f"Business with id {cmd.business_id} not found for owner {cmd.owner_id}."
+                )
+
             holidays = await uow.holidays.list_by_business(
                 business_id=cmd.business_id, year=cmd.year, month=cmd.month
             )
@@ -59,6 +79,15 @@ class RenameHolidayUseCase:
 
     async def execute(self, cmd: RenameHolidayCommand) -> Holiday:
         async with self.uow as uow:
+            # Business ownership check
+            business = await uow.businesses.get_by_id_and_owner(
+                business_id=cmd.business_id, owner_id=cmd.owner_id
+            )
+            if not business:
+                raise BusinessNotFoundError(
+                    f"Business with id {cmd.business_id} not found for owner {cmd.owner_id}."
+                )
+
             holiday = await uow.holidays.get_by_business_and_date(
                 business_id=cmd.business_id, date_=cmd.date
             )
@@ -67,7 +96,10 @@ class RenameHolidayUseCase:
                     business_id=str(cmd.business_id), date=str(cmd.date)
                 )
 
-            holiday.rename(cmd.new_name)
+            if cmd.new_name is None:
+                holiday.rename("")
+            else:
+                holiday.rename(cmd.new_name)
 
             await uow.holidays.update(holiday)
             await uow.commit()
@@ -81,6 +113,15 @@ class DeleteHolidayUseCase:
 
     async def execute(self, cmd: DeleteHolidayCommand) -> None:
         async with self.uow as uow:
+            # Business ownership check
+            business = await uow.businesses.get_by_id_and_owner(
+                business_id=cmd.business_id, owner_id=cmd.owner_id
+            )
+            if not business:
+                raise BusinessNotFoundError(
+                    f"Business with id {cmd.business_id} not found for owner {cmd.owner_id}."
+                )
+
             await uow.holidays.delete_by_business_and_date(
                 business_id=cmd.business_id, date_=cmd.date
             )
@@ -93,6 +134,15 @@ class GetHolidayByDateUseCase:
 
     async def execute(self, cmd: GetHolidayByDateCommand) -> Holiday | None:
         async with self.uow as uow:
+            # Business ownership check
+            business = await uow.businesses.get_by_id_and_owner(
+                business_id=cmd.business_id, owner_id=cmd.owner_id
+            )
+            if not business:
+                raise BusinessNotFoundError(
+                    f"Business with id {cmd.business_id} not found for owner {cmd.owner_id}."
+                )
+
             holiday = await uow.holidays.get_by_business_and_date(
                 business_id=cmd.business_id, date_=cmd.date
             )

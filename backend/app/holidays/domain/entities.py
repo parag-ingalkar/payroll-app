@@ -32,8 +32,9 @@ class Holiday:
 
     def rename(self, new_name: str):
         normalized_name = normalize_whitespace(new_name)
+
         if normalized_name == self.name:
             raise InvalidHolidayNameError(
                 "New name must be different from the current name."
             )
-        self.name = normalized_name
+        self.name = normalized_name or None

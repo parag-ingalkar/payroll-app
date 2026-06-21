@@ -1,4 +1,3 @@
-# app/api_errors.py
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
