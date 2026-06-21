@@ -4,7 +4,9 @@ class HolidayDomainError(Exception):
 
 class HolidayAlreadyExistsError(HolidayDomainError):
     def __init__(self, business_id: str, date: str) -> None:
-        super().__init__(f"Holiday already exists for business_id={business_id} on date={date}.")
+        super().__init__(
+            f"Holiday already exists for business_id={business_id} on date={date}."
+        )
         self.business_id = business_id
         self.date = date
 
@@ -20,6 +22,8 @@ class HolidayNotFoundError(HolidayDomainError):
     """Raised when a holiday is not found for a given business and date."""
 
     def __init__(self, business_id: str, date: str):
-        super().__init__(f"Holiday not found for business_id={business_id} on date={date}.")
+        super().__init__(
+            f"Holiday not found for business_id={business_id} on date={date}."
+        )
         self.business_id = business_id
         self.date = date
