@@ -1,7 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+
 from decimal import Decimal
-from uuid import uuid4, UUID
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
     CheckConstraint,
@@ -15,10 +16,11 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.db import Base
 from app.business.domain.entities import WageType, Weekday
+from app.core.db import Base
 
 if TYPE_CHECKING:
+    from app.employees.infrastructure.orm import EmployeeModel
     from app.holidays.infrastructure.orm import HolidayModel
 
 
@@ -63,6 +65,12 @@ class BusinessModel(Base):
     )
 
     holidays: Mapped[list["HolidayModel"]] = relationship(
+        back_populates="business",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    employees: Mapped[list["EmployeeModel"]] = relationship(
         back_populates="business",
         cascade="all, delete-orphan",
         passive_deletes=True,

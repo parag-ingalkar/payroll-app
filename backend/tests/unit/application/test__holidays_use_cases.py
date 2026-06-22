@@ -3,22 +3,25 @@ from datetime import date
 
 import pytest
 
-from app.holidays.domain.entities import Holiday
-from app.holidays.domain.exceptions import (
-    HolidayAlreadyExistsError,
-    HolidayNotFoundError,
-)
+from app.business.domain.exceptions import BusinessNotFoundError
 from app.holidays.application.commands import (
     CreateHolidayCommand,
     DeleteHolidayCommand,
+    GetHolidayByDateCommand,
     ListHolidaysCommand,
     RenameHolidayCommand,
 )
 from app.holidays.application.use_cases import (
     CreateHolidayUseCase,
     DeleteHolidayUseCase,
+    GetHolidayByDateUseCase,
     ListHolidaysUseCase,
     RenameHolidayUseCase,
+)
+from app.holidays.domain.entities import Holiday
+from app.holidays.domain.exceptions import (
+    HolidayAlreadyExistsError,
+    HolidayNotFoundError,
 )
 
 
@@ -297,3 +300,115 @@ async def test__delete_holiday_use_case(
     assert in_memory_uow.committed is True
     holidays = await in_memory_holiday_repo.list_by_business(business_id=business.id)
     assert len(holidays) == 0
+
+
+# Authorization Tests
+
+
+@pytest.mark.asyncio
+async def test__create_holiday_wrong_owner_raises_error(
+    in_memory_uow,
+    in_memory_business_repo,
+):
+    """Creating a holiday with wrong owner_id should raise BusinessNotFoundError."""
+    business = in_memory_business_repo._items[0]
+
+    use_case = CreateHolidayUseCase(uow=in_memory_uow)
+    cmd = CreateHolidayCommand(
+        business_id=business.id,
+        owner_id="wrong-owner-id",
+        date=date(2026, 2, 14),
+        name="Valentine's Day",
+    )
+
+    with pytest.raises(BusinessNotFoundError) as exc_info:
+        await use_case.execute(cmd)
+
+    assert "not found for owner" in str(exc_info.value)
+    assert in_memory_uow.committed is False
+
+
+@pytest.mark.asyncio
+async def test__list_holidays_wrong_owner_raises_error(
+    in_memory_uow,
+    in_memory_business_repo,
+):
+    """Listing holidays with wrong owner_id should raise BusinessNotFoundError."""
+    business = in_memory_business_repo._items[0]
+
+    use_case = ListHolidaysUseCase(uow=in_memory_uow)
+    cmd = ListHolidaysCommand(
+        business_id=business.id,
+        owner_id="wrong-owner-id",
+    )
+
+    with pytest.raises(BusinessNotFoundError) as exc_info:
+        await use_case.execute(cmd)
+
+    assert "not found for owner" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test__get_holiday_by_date_wrong_owner_raises_error(
+    in_memory_uow,
+    in_memory_business_repo,
+):
+    """Getting a holiday by date with wrong owner_id should raise BusinessNotFoundError."""
+    business = in_memory_business_repo._items[0]
+
+    use_case = GetHolidayByDateUseCase(uow=in_memory_uow)
+    cmd = GetHolidayByDateCommand(
+        business_id=business.id,
+        owner_id="wrong-owner-id",
+        date=date(2026, 1, 1),
+    )
+
+    with pytest.raises(BusinessNotFoundError) as exc_info:
+        await use_case.execute(cmd)
+
+    assert "not found for owner" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test__rename_holiday_wrong_owner_raises_error(
+    in_memory_uow,
+    in_memory_business_repo,
+):
+    """Renaming a holiday with wrong owner_id should raise BusinessNotFoundError."""
+    business = in_memory_business_repo._items[0]
+
+    use_case = RenameHolidayUseCase(uow=in_memory_uow)
+    cmd = RenameHolidayCommand(
+        business_id=business.id,
+        owner_id="wrong-owner-id",
+        date=date(2026, 1, 1),
+        new_name="Should Not Work",
+    )
+
+    with pytest.raises(BusinessNotFoundError) as exc_info:
+        await use_case.execute(cmd)
+
+    assert "not found for owner" in str(exc_info.value)
+    assert in_memory_uow.committed is False
+
+
+@pytest.mark.asyncio
+async def test__delete_holiday_wrong_owner_raises_error(
+    in_memory_uow,
+    in_memory_business_repo,
+):
+    """Deleting a holiday with wrong owner_id should raise BusinessNotFoundError."""
+    business = in_memory_business_repo._items[0]
+
+    use_case = DeleteHolidayUseCase(uow=in_memory_uow)
+    cmd = DeleteHolidayCommand(
+        business_id=business.id,
+        owner_id="wrong-owner-id",
+        date=date(2026, 1, 1),
+    )
+
+    with pytest.raises(BusinessNotFoundError) as exc_info:
+        await use_case.execute(cmd)
+
+    assert "not found for owner" in str(exc_info.value)
+    assert in_memory_uow.committed is False

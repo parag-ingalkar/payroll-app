@@ -6,25 +6,9 @@ import pytest
 BASE_URL = "/businesses"
 
 
-async def _create_business_via_api(api_client, business_defaults) -> UUID:
-    resp = await api_client.post(
-        "/businesses",
-        json={
-            "name": business_defaults["name"],
-            "default_wage_type": business_defaults["default_wage_type"].value,
-            "default_working_hours_per_day": "8.0",
-            "default_overtime_multiplier": "1.5",
-            "payroll_start_day": 1,
-            "weekly_off_rules": [],
-        },
-    )
-    assert resp.status_code == 201
-    return UUID(resp.json()["id"])
-
-
 @pytest.mark.asyncio
-async def test__create_holiday_happy_path(api_client, business_defaults):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+async def test__create_holiday_happy_path(api_client, create_business_via_api):
+    business_id = await create_business_via_api()
 
     resp = await api_client.post(
         f"{BASE_URL}/{business_id}/holidays",
@@ -41,8 +25,10 @@ async def test__create_holiday_happy_path(api_client, business_defaults):
 
 
 @pytest.mark.asyncio
-async def test__create_duplicate_holiday_returns_409(api_client, business_defaults):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+async def test__create_duplicate_holiday_returns_409(
+    api_client, create_business_via_api
+):
+    business_id = await create_business_via_api()
     body = {"date": "2026-01-01", "name": "New Year's Day"}
 
     # First create succeeds
@@ -58,8 +44,10 @@ async def test__create_duplicate_holiday_returns_409(api_client, business_defaul
 
 
 @pytest.mark.asyncio
-async def test__list_holidays_returns_sorted_results(api_client, business_defaults):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+async def test__list_holidays_returns_sorted_results(
+    api_client, create_business_via_api
+):
+    business_id = await create_business_via_api()
 
     # Create two holidays on different dates
     await api_client.post(
@@ -79,8 +67,8 @@ async def test__list_holidays_returns_sorted_results(api_client, business_defaul
 
 
 @pytest.mark.asyncio
-async def test__get_holiday_by_date_happy_path(api_client, business_defaults):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+async def test__get_holiday_by_date_happy_path(api_client, create_business_via_api):
+    business_id = await create_business_via_api()
 
     await api_client.post(
         f"{BASE_URL}/{business_id}/holidays",
@@ -98,9 +86,9 @@ async def test__get_holiday_by_date_happy_path(api_client, business_defaults):
 
 @pytest.mark.asyncio
 async def test__get_holiday_by_date_not_found_returns_404(
-    api_client, business_defaults
+    api_client, create_business_via_api
 ):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+    business_id = await create_business_via_api()
 
     resp = await api_client.get(
         f"{BASE_URL}/{business_id}/holidays/2026-02-01",
@@ -111,8 +99,8 @@ async def test__get_holiday_by_date_not_found_returns_404(
 
 
 @pytest.mark.asyncio
-async def test__update_holiday_name_happy_path(api_client, business_defaults):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+async def test__update_holiday_name_happy_path(api_client, create_business_via_api):
+    business_id = await create_business_via_api()
 
     create_resp = await api_client.post(
         f"{BASE_URL}/{business_id}/holidays",
@@ -131,8 +119,10 @@ async def test__update_holiday_name_happy_path(api_client, business_defaults):
 
 
 @pytest.mark.asyncio
-async def test__update_holiday_clear_name_with_null(api_client, business_defaults):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+async def test__update_holiday_clear_name_with_null(
+    api_client, create_business_via_api
+):
+    business_id = await create_business_via_api()
 
     await api_client.post(
         f"{BASE_URL}/{business_id}/holidays",
@@ -150,9 +140,9 @@ async def test__update_holiday_clear_name_with_null(api_client, business_default
 
 @pytest.mark.asyncio
 async def test__update_holiday_without_fields_returns_400(
-    api_client, business_defaults
+    api_client, create_business_via_api
 ):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+    business_id = await create_business_via_api()
 
     await api_client.post(
         f"{BASE_URL}/{business_id}/holidays",
@@ -168,8 +158,10 @@ async def test__update_holiday_without_fields_returns_400(
 
 
 @pytest.mark.asyncio
-async def test__update_holiday_not_found_returns_404(api_client, business_defaults):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+async def test__update_holiday_not_found_returns_404(
+    api_client, create_business_via_api
+):
+    business_id = await create_business_via_api()
 
     patch_resp = await api_client.patch(
         f"{BASE_URL}/{business_id}/holidays/2026-02-01",
@@ -181,8 +173,8 @@ async def test__update_holiday_not_found_returns_404(api_client, business_defaul
 
 
 @pytest.mark.asyncio
-async def test__delete_holiday_happy_path(api_client, business_defaults):
-    business_id = await _create_business_via_api(api_client, business_defaults)
+async def test__delete_holiday_happy_path(api_client, create_business_via_api):
+    business_id = await create_business_via_api()
 
     await api_client.post(
         f"{BASE_URL}/{business_id}/holidays",
@@ -203,7 +195,7 @@ async def test__delete_holiday_happy_path(api_client, business_defaults):
 
 @pytest.mark.asyncio
 async def test__holiday_routes_respect_business_ownership(
-    api_client, business_defaults
+    api_client, create_business_via_api
 ):
     """
     Ownership E2E:
@@ -211,7 +203,7 @@ async def test__holiday_routes_respect_business_ownership(
     - Create a holiday for that business.
     - Try to access holidays for a different business id: should return business_not_found.
     """
-    business_id = await _create_business_via_api(api_client, business_defaults)
+    business_id = await create_business_via_api()
     other_business_id = UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
 
     # Create holiday for the real business
@@ -230,3 +222,65 @@ async def test__holiday_routes_respect_business_ownership(
     # This comes from BusinessNotFoundError handler
     assert detail["code"] == "business_not_found"
     assert detail["message"] == "Business not found."
+
+
+@pytest.mark.asyncio
+async def test__create_holiday_wrong_business_returns_404(
+    api_client, create_business_via_api
+):
+    """Attempt to create holiday for a business that doesn't exist or doesn't belong to the user."""
+    other_business_id = UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+
+    resp = await api_client.post(
+        f"{BASE_URL}/{other_business_id}/holidays",
+        json={"date": "2026-01-01", "name": "New Year's Day"},
+    )
+    assert resp.status_code == 404
+    detail = resp.json()["detail"]
+    assert detail["code"] == "business_not_found"
+
+
+@pytest.mark.asyncio
+async def test__get_holiday_by_date_wrong_business_returns_404(
+    api_client, create_business_via_api
+):
+    """Attempt to get a holiday from a business that doesn't exist or doesn't belong to the user."""
+    other_business_id = UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+
+    resp = await api_client.get(
+        f"{BASE_URL}/{other_business_id}/holidays/2026-01-01",
+    )
+    assert resp.status_code == 404
+    detail = resp.json()["detail"]
+    assert detail["code"] == "business_not_found"
+
+
+@pytest.mark.asyncio
+async def test__update_holiday_wrong_business_returns_404(
+    api_client, create_business_via_api
+):
+    """Attempt to update a holiday for a business that doesn't exist or doesn't belong to the user."""
+    other_business_id = UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+
+    resp = await api_client.patch(
+        f"{BASE_URL}/{other_business_id}/holidays/2026-01-01",
+        json={"name": "Updated Name"},
+    )
+    assert resp.status_code == 404
+    detail = resp.json()["detail"]
+    assert detail["code"] == "business_not_found"
+
+
+@pytest.mark.asyncio
+async def test__delete_holiday_wrong_business_returns_404(
+    api_client, create_business_via_api
+):
+    """Attempt to delete a holiday from a business that doesn't exist or doesn't belong to the user."""
+    other_business_id = UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+
+    resp = await api_client.delete(
+        f"{BASE_URL}/{other_business_id}/holidays/2026-01-01",
+    )
+    assert resp.status_code == 404
+    detail = resp.json()["detail"]
+    assert detail["code"] == "business_not_found"

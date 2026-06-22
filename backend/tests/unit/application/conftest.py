@@ -1,14 +1,17 @@
 # tests/unit/application/conftest.py
 from collections.abc import Sequence
 from datetime import date
+from decimal import Decimal
 from uuid import UUID, uuid4
 
 import pytest
 
 from app.business.application.ports import BusinessRepositoryPort
-from app.business.domain.entities import Business
+from app.business.domain.entities import Business, WageType
 from app.business.domain.value_objects import normalize_business_name_for_lookup
 from app.core.uow import UnitOfWorkPort
+from app.employees.application.ports import EmployeeRepositoryPort
+from app.employees.domain.entities import Employee
 from app.holidays.application.ports import HolidayRepositoryPort
 from app.holidays.domain.entities import Holiday
 
@@ -119,14 +122,57 @@ class InMemoryHolidayRepository(HolidayRepositoryPort):
                 return
 
 
+class InMemoryEmployeeRepository(EmployeeRepositoryPort):
+    def __init__(self, items: list[Employee] | None = None) -> None:
+        self._items: list[Employee] = list(items or [])
+
+    async def add(self, employee: Employee) -> None:
+        self._items.append(employee)
+
+    async def get_by_business_and_id(
+        self, business_id: UUID, employee_id: UUID
+    ) -> Employee | None:
+        return next(
+            (
+                e
+                for e in self._items
+                if e.business_id == business_id and e.id == employee_id
+            ),
+            None,
+        )
+
+    async def list_by_business(
+        self, business_id: UUID, is_active: bool | None = None
+    ) -> Sequence[Employee]:
+        result = [e for e in self._items if e.business_id == business_id]
+        if is_active is not None:
+            result = [e for e in result if e.is_active == is_active]
+        return result
+
+    async def update(self, employee: Employee) -> None:
+        for idx, e in enumerate(self._items):
+            if e.id == employee.id and e.business_id == employee.business_id:
+                self._items[idx] = employee
+                return
+
+    async def delete(self, employee: Employee) -> None:
+        self._items = [
+            e
+            for e in self._items
+            if not (e.business_id == employee.business_id and e.id == employee.id)
+        ]
+
+
 class InMemoryUnitOfWork(UnitOfWorkPort):
     def __init__(
         self,
         business_repo: InMemoryBusinessRepository,
         holiday_repo: InMemoryHolidayRepository,
+        employee_repo: InMemoryEmployeeRepository,
     ) -> None:
         self.businesses = business_repo
         self.holidays = holiday_repo
+        self.employees = employee_repo
         self.committed = False
 
     async def __aenter__(self) -> "InMemoryUnitOfWork":
@@ -152,9 +198,7 @@ def in_memory_business_repo(business_defaults) -> InMemoryBusinessRepository:
 def in_memory_holiday_repo(
     in_memory_business_repo: InMemoryBusinessRepository,
 ) -> InMemoryHolidayRepository:
-    # Use the same business id as the seeded business
     business = in_memory_business_repo._items[0]
-
     holiday = Holiday.create(
         business_id=business.id,
         date_=date(2026, 1, 1),
@@ -164,11 +208,31 @@ def in_memory_holiday_repo(
 
 
 @pytest.fixture
+def in_memory_employee_repo(
+    in_memory_business_repo: InMemoryBusinessRepository,
+) -> InMemoryEmployeeRepository:
+    business = in_memory_business_repo._items[0]
+    employee = Employee.create(
+        id=uuid4(),
+        business_id=business.id,
+        name="John Doe",
+        designation="Engineer",
+        wage_type=WageType.MONTHLY,
+        wage_rate=Decimal("50000.00"),
+        working_hours_per_day=Decimal("8.0"),
+        overtime_multiplier=Decimal("1.5"),
+    )
+    return InMemoryEmployeeRepository(items=[employee])
+
+
+@pytest.fixture
 def in_memory_uow(
     in_memory_business_repo: InMemoryBusinessRepository,
     in_memory_holiday_repo: InMemoryHolidayRepository,
+    in_memory_employee_repo: InMemoryEmployeeRepository,
 ) -> InMemoryUnitOfWork:
     return InMemoryUnitOfWork(
         business_repo=in_memory_business_repo,
         holiday_repo=in_memory_holiday_repo,
+        employee_repo=in_memory_employee_repo,
     )

@@ -1,11 +1,36 @@
 # tests/integration/conftest.py
-import pytest
 from datetime import date
-from uuid import UUID
+from decimal import Decimal
+from uuid import UUID, uuid4
 
-from app.business.domain.entities import Business
+import pytest
+
+from app.business.domain.entities import Business, WageType
 from app.core.uow import SqlAlchemyUnitOfWork
+from app.employees.domain.entities import Employee
 from app.holidays.domain.entities import Holiday
+
+
+@pytest.fixture
+async def create_business_via_api(api_client, business_defaults):
+    """Fixture that returns an async function to create a business via API."""
+
+    async def _create() -> UUID:
+        resp = await api_client.post(
+            "/businesses",
+            json={
+                "name": business_defaults["name"],
+                "default_wage_type": business_defaults["default_wage_type"].value,
+                "default_working_hours_per_day": "8.0",
+                "default_overtime_multiplier": "1.5",
+                "payroll_start_day": 1,
+                "weekly_off_rules": [],
+            },
+        )
+        assert resp.status_code == 201
+        return UUID(resp.json()["id"])
+
+    return _create
 
 
 @pytest.fixture
@@ -33,3 +58,24 @@ async def add_business_and_holiday_in_db(
         )
         await uow.holidays.add(holiday)
         await uow.commit()
+
+
+@pytest.fixture
+async def add_employee_in_db(
+    sqlalchemy_uow: SqlAlchemyUnitOfWork,
+    add_business_in_db: Business,
+) -> Employee:
+    employee = Employee.create(
+        id=uuid4(),
+        business_id=add_business_in_db.id,
+        name="John Doe",
+        designation="Engineer",
+        wage_type=WageType.MONTHLY,
+        wage_rate=Decimal("50000.00"),
+        working_hours_per_day=Decimal("8.0"),
+        overtime_multiplier=Decimal("1.5"),
+    )
+    async with sqlalchemy_uow as uow:
+        await uow.employees.add(employee)
+        await uow.commit()
+    return employee
