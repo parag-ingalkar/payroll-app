@@ -5,6 +5,7 @@ This project uses a Clean Architecture / Vertical Slice pattern with FastAPI, SQ
 - Implement a full vertical slice (domain → application → infrastructure → presentation) from scratch.
 - Write unit and integration tests that match our existing patterns.
 - Ask the right domain questions before generating code.
+- First create a plan for implementation. Once it is approved by me, only then modify any code in the codebase.
 
 This file is the contract between humans and agents about how code should be structured and what invariants must hold.
 

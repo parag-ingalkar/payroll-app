@@ -1,8 +1,10 @@
+from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 from enum import Enum
 from uuid import UUID, uuid4
-from collections import defaultdict
+
 from .exceptions import InvalidWeeklyOffRulesError
 from .value_objects import normalize_whitespace
 
@@ -89,6 +91,21 @@ class Business:
                 raise InvalidWeeklyOffRulesError(
                     f"Weekday {weekday} cannot have both every-week and specific-week rules."
                 )
+
+    def is_weekly_off(self, d: date) -> bool:
+        """Return True if the given date falls on a weekly off day for this business."""
+        date_weekday_name = d.strftime("%A").lower()  # e.g. "monday"
+        try:
+            date_weekday = Weekday(date_weekday_name)
+        except ValueError:
+            return False
+        week_of_month = (d.day - 1) // 7 + 1
+        for rule in self.weekly_off_rules:
+            if rule.weekday != date_weekday:
+                continue
+            if rule.week_of_month is None or rule.week_of_month == week_of_month:
+                return True
+        return False
 
     def replace_weekly_off_rules(self, rules: list[WeeklyOffRule]) -> None:
         self.weekly_off_rules = rules

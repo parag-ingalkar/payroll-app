@@ -20,6 +20,7 @@ from app.business.domain.entities import WageType, Weekday
 from app.core.db import Base
 
 if TYPE_CHECKING:
+    from app.attendance.infrastructure.orm import AttendanceModel
     from app.employees.infrastructure.orm import EmployeeModel
     from app.holidays.infrastructure.orm import HolidayModel
 
@@ -71,6 +72,12 @@ class BusinessModel(Base):
     )
 
     employees: Mapped[list["EmployeeModel"]] = relationship(
+        back_populates="business",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    attendance: Mapped[list["AttendanceModel"]] = relationship(
         back_populates="business",
         cascade="all, delete-orphan",
         passive_deletes=True,

@@ -6,6 +6,8 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from app.attendance.application.ports import AttendanceRepositoryPort
+from app.attendance.domain.entities import Attendance, AttendanceStatus
 from app.business.application.ports import BusinessRepositoryPort
 from app.business.domain.entities import Business, WageType
 from app.business.domain.value_objects import normalize_business_name_for_lookup
@@ -163,16 +165,120 @@ class InMemoryEmployeeRepository(EmployeeRepositoryPort):
         ]
 
 
+class InMemoryAttendanceRepository(AttendanceRepositoryPort):
+    def __init__(self, items: list[Attendance] | None = None) -> None:
+        self._items: list[Attendance] = list(items or [])
+
+    async def add(self, attendance: Attendance) -> None:
+        self._items.append(attendance)
+
+    async def get_by_employee_and_date(
+        self, business_id: UUID, employee_id: UUID, date_: date
+    ) -> Attendance | None:
+        return next(
+            (
+                a
+                for a in self._items
+                if a.business_id == business_id
+                and a.employee_id == employee_id
+                and a.date == date_
+            ),
+            None,
+        )
+
+    async def list_by_date(
+        self,
+        business_id: UUID,
+        date_: date,
+        employee_id: UUID | None = None,
+        status: AttendanceStatus | None = None,
+    ) -> Sequence[Attendance]:
+        result = [
+            a for a in self._items if a.business_id == business_id and a.date == date_
+        ]
+        if employee_id is not None:
+            result = [a for a in result if a.employee_id == employee_id]
+        if status is not None:
+            result = [a for a in result if a.status == status]
+        return result
+
+    async def list_by_employee(
+        self,
+        business_id: UUID,
+        employee_id: UUID,
+        start_date: date | None = None,
+        end_date: date | None = None,
+        status: AttendanceStatus | None = None,
+    ) -> Sequence[Attendance]:
+        result = [
+            a
+            for a in self._items
+            if a.business_id == business_id and a.employee_id == employee_id
+        ]
+        if start_date is not None:
+            result = [a for a in result if a.date >= start_date]
+        if end_date is not None:
+            result = [a for a in result if a.date <= end_date]
+        if status is not None:
+            result = [a for a in result if a.status == status]
+        return sorted(result, key=lambda a: a.date)
+
+    async def update(self, attendance: Attendance) -> None:
+        for idx, a in enumerate(self._items):
+            if (
+                a.business_id == attendance.business_id
+                and a.employee_id == attendance.employee_id
+                and a.date == attendance.date
+            ):
+                self._items[idx] = attendance
+                return
+
+    async def delete(self, attendance: Attendance) -> None:
+        self._items = [
+            a
+            for a in self._items
+            if not (
+                a.business_id == attendance.business_id
+                and a.employee_id == attendance.employee_id
+                and a.date == attendance.date
+            )
+        ]
+
+    async def upsert_many(self, attendances: list[Attendance]) -> Sequence[Attendance]:
+        results: list[Attendance] = []
+        for attendance in attendances:
+            existing_idx = next(
+                (
+                    i
+                    for i, a in enumerate(self._items)
+                    if a.business_id == attendance.business_id
+                    and a.employee_id == attendance.employee_id
+                    and a.date == attendance.date
+                ),
+                None,
+            )
+            if existing_idx is not None:
+                self._items[existing_idx].status = attendance.status
+                self._items[existing_idx].overtime_hours = attendance.overtime_hours
+                results.append(self._items[existing_idx])
+            else:
+                self._items.append(attendance)
+                results.append(attendance)
+        return results
+
+
 class InMemoryUnitOfWork(UnitOfWorkPort):
     def __init__(
         self,
         business_repo: InMemoryBusinessRepository,
         holiday_repo: InMemoryHolidayRepository,
         employee_repo: InMemoryEmployeeRepository,
+        attendance_repo: InMemoryAttendanceRepository | None = None,
     ) -> None:
         self.businesses = business_repo
         self.holidays = holiday_repo
         self.employees = employee_repo
+        self.attendance = attendance_repo or InMemoryAttendanceRepository()
         self.committed = False
 
     async def __aenter__(self) -> "InMemoryUnitOfWork":
@@ -226,13 +332,20 @@ def in_memory_employee_repo(
 
 
 @pytest.fixture
+def in_memory_attendance_repo() -> InMemoryAttendanceRepository:
+    return InMemoryAttendanceRepository()
+
+
+@pytest.fixture
 def in_memory_uow(
     in_memory_business_repo: InMemoryBusinessRepository,
     in_memory_holiday_repo: InMemoryHolidayRepository,
     in_memory_employee_repo: InMemoryEmployeeRepository,
+    in_memory_attendance_repo: InMemoryAttendanceRepository,
 ) -> InMemoryUnitOfWork:
     return InMemoryUnitOfWork(
         business_repo=in_memory_business_repo,
         holiday_repo=in_memory_holiday_repo,
         employee_repo=in_memory_employee_repo,
+        attendance_repo=in_memory_attendance_repo,
     )

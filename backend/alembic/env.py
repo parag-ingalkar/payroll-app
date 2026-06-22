@@ -3,6 +3,9 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from app.attendance.infrastructure.orm import (
+    AttendanceModel,  # noqa: F401 - ensure models are imported for Alembic's autogenerate
+)
 from app.business.infrastructure.orm import (  # noqa: F401 - ensure models are imported for Alembic's autogenerate
     BusinessModel,
     BusinessWeeklyOffRuleModel,

@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from app.attendance.domain.entities import Attendance, AttendanceStatus
 from app.business.domain.entities import Business, WageType
 from app.core.uow import SqlAlchemyUnitOfWork
 from app.employees.domain.entities import Employee
@@ -79,3 +80,21 @@ async def add_employee_in_db(
         await uow.employees.add(employee)
         await uow.commit()
     return employee
+
+
+@pytest.fixture
+async def add_attendance_in_db(
+    sqlalchemy_uow: SqlAlchemyUnitOfWork,
+    add_employee_in_db: Employee,
+) -> Attendance:
+    attendance = Attendance.create(
+        id=uuid4(),
+        business_id=add_employee_in_db.business_id,
+        employee_id=add_employee_in_db.id,
+        date=date(2026, 6, 10),
+        status=AttendanceStatus.PRESENT,
+    )
+    async with sqlalchemy_uow as uow:
+        await uow.attendance.add(attendance)
+        await uow.commit()
+    return attendance

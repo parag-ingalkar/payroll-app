@@ -2,6 +2,8 @@ from typing import Protocol
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.attendance.application.ports import AttendanceRepositoryPort
+from app.attendance.infrastructure.repository import SqlAlchemyAttendanceRepository
 from app.business.application.ports import BusinessRepositoryPort
 from app.business.infrastructure.repositories import SqlAlchemyBusinessRepository
 from app.employees.application.ports import EmployeeRepositoryPort
@@ -14,6 +16,7 @@ class UnitOfWorkPort(Protocol):
     businesses: BusinessRepositoryPort
     holidays: HolidayRepositoryPort
     employees: EmployeeRepositoryPort
+    attendance: AttendanceRepositoryPort
 
     async def __aenter__(self) -> "UnitOfWorkPort": ...
 
@@ -31,12 +34,14 @@ class SqlAlchemyUnitOfWork(UnitOfWorkPort):
         self.businesses: BusinessRepositoryPort
         self.holidays: HolidayRepositoryPort
         self.employees: EmployeeRepositoryPort
+        self.attendance: AttendanceRepositoryPort
 
     async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
         self.session = self._session_factory()
         self.businesses = SqlAlchemyBusinessRepository(self.session)
         self.holidays = SqlAlchemyHolidayRepository(self.session)
         self.employees = SqlAlchemyEmployeeRepository(self.session)
+        self.attendance = SqlAlchemyAttendanceRepository(self.session)
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
