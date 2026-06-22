@@ -1,10 +1,9 @@
 # tests/integration/test__business_use_cases_integration.py
 
 from decimal import Decimal
+
 import pytest
 
-from app.business.domain.entities import WageType, Weekday
-from app.business.domain.exceptions import DuplicateBusinessError, BusinessNotFoundError
 from app.business.application.commands import (
     CreateBusinessCommand,
     ReplaceWeeklyOffRulesCommand,
@@ -13,11 +12,14 @@ from app.business.application.commands import (
 )
 from app.business.application.use_cases import (
     CreateBusinessUseCase,
+    DeleteBusinessUseCase,
     GetBusinessUseCase,
     ReplaceWeeklyOffRulesUseCase,
     UpdateBusinessUseCase,
-    DeleteBusinessUseCase,
 )
+from app.business.domain.entities import WageType, Weekday
+from app.business.domain.exceptions import BusinessNotFoundError, DuplicateBusinessError
+from app.business.domain.value_objects import SalaryBasis
 
 
 @pytest.mark.asyncio
@@ -31,6 +33,7 @@ async def test__create_and_get_business_integration(sqlalchemy_uow):
         default_wage_type=WageType.HOURLY,
         default_working_hours_per_day=Decimal("8.0"),
         default_overtime_multiplier=Decimal("1.5"),
+        default_salary_basis=SalaryBasis.WORKING_26_DAYS,
         payroll_start_day=1,
         weekly_off_rules=[
             WeeklyOffRuleInput(weekday=Weekday.MONDAY, week_of_month=2),
@@ -64,6 +67,7 @@ async def test__update_business_integration(sqlalchemy_uow):
             default_wage_type=WageType.HOURLY,
             default_working_hours_per_day=Decimal("8.0"),
             default_overtime_multiplier=Decimal("1.5"),
+            default_salary_basis=SalaryBasis.WORKING_26_DAYS,
             payroll_start_day=1,
             weekly_off_rules=[],
         )
@@ -99,6 +103,7 @@ async def test__replace_business_weekly_off_rules_integration(sqlalchemy_uow):
         default_wage_type=WageType.HOURLY,
         default_working_hours_per_day=Decimal("8.0"),
         default_overtime_multiplier=Decimal("1.5"),
+        default_salary_basis=SalaryBasis.WORKING_26_DAYS,
         payroll_start_day=1,
         weekly_off_rules=[
             WeeklyOffRuleInput(weekday=Weekday.MONDAY, week_of_month=2),
@@ -143,6 +148,7 @@ async def test__delete_business_integration(sqlalchemy_uow):
             default_wage_type=WageType.HOURLY,
             default_working_hours_per_day=Decimal("8.0"),
             default_overtime_multiplier=Decimal("1.5"),
+            default_salary_basis=SalaryBasis.WORKING_26_DAYS,
             payroll_start_day=1,
             weekly_off_rules=[],
         )
@@ -165,6 +171,7 @@ async def test__cannot_create_duplicate_business_integration(sqlalchemy_uow):
             default_wage_type=WageType.HOURLY,
             default_working_hours_per_day=Decimal("8.0"),
             default_overtime_multiplier=Decimal("1.5"),
+            default_salary_basis=SalaryBasis.WORKING_26_DAYS,
             payroll_start_day=1,
             weekly_off_rules=[],
         )
@@ -178,6 +185,7 @@ async def test__cannot_create_duplicate_business_integration(sqlalchemy_uow):
                 default_wage_type=WageType.HOURLY,
                 default_working_hours_per_day=Decimal("8.0"),
                 default_overtime_multiplier=Decimal("1.5"),
+                default_salary_basis=SalaryBasis.WORKING_26_DAYS,
                 payroll_start_day=1,
                 weekly_off_rules=[],
             )

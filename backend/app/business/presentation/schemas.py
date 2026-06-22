@@ -4,8 +4,12 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.business.domain.entities import WageType, Weekday
-from app.business.domain.value_objects import normalize_whitespace
+from app.business.domain.value_objects import (
+    SalaryBasis,
+    WageType,
+    Weekday,
+    normalize_whitespace,
+)
 
 
 class BusinessWeeklyOffRuleBase(BaseModel):
@@ -36,6 +40,7 @@ class BusinessBase(BaseModel):
         max_digits=5,
         decimal_places=2,
     )
+    default_salary_basis: SalaryBasis
     payroll_start_day: int = Field(default=1, ge=1, le=28)
 
     @field_validator("name")
@@ -54,6 +59,7 @@ class BusinessCreate(BusinessBase):
 class BusinessUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     default_wage_type: WageType | None = None
+    default_salary_basis: SalaryBasis | None = None
     default_working_hours_per_day: Decimal | None = Field(
         default=None,
         gt=0,
@@ -85,6 +91,7 @@ class BusinessRead(BaseModel):
     owner_id: str
     name: str
     default_wage_type: WageType
+    default_salary_basis: SalaryBasis
     default_working_hours_per_day: Decimal
     default_overtime_multiplier: Decimal
     payroll_start_day: int

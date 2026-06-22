@@ -5,36 +5,36 @@ from fastapi import APIRouter, Depends, status
 
 from app.business.application.commands import (
     CreateBusinessCommand,
-    UpdateBusinessCommand,
     ReplaceWeeklyOffRulesCommand,
+    UpdateBusinessCommand,
     WeeklyOffRuleInput,
 )
 from app.business.application.use_cases import (
     CreateBusinessUseCase,
-    ListBusinessesUseCase,
-    GetBusinessUseCase,
-    UpdateBusinessUseCase,
     DeleteBusinessUseCase,
+    GetBusinessUseCase,
     GetWeeklyOffRulesUseCase,
+    ListBusinessesUseCase,
     ReplaceWeeklyOffRulesUseCase,
-)
-from app.business.presentation.schemas import (
-    BusinessCreate,
-    BusinessUpdate,
-    BusinessRead,
-    BusinessWeeklyOffRuleRead,
-    BusinessWeeklyOffRuleCreate,
+    UpdateBusinessUseCase,
 )
 from app.business.presentation.dependencies import (
     get_create_business_use_case,
-    get_list_businesses_use_case,
-    get_get_business_use_case,
-    get_update_business_use_case,
     get_delete_business_use_case,
+    get_get_business_use_case,
     get_get_weekly_off_rules_use_case,
+    get_list_businesses_use_case,
     get_replace_weekly_off_rules_use_case,
+    get_update_business_use_case,
 )
-from app.core.dependencies import get_current_user, CurrentPrincipal
+from app.business.presentation.schemas import (
+    BusinessCreate,
+    BusinessRead,
+    BusinessUpdate,
+    BusinessWeeklyOffRuleCreate,
+    BusinessWeeklyOffRuleRead,
+)
+from app.core.dependencies import CurrentPrincipal, get_current_user
 
 router = APIRouter()
 
@@ -54,6 +54,7 @@ async def create_business(
             owner_id=current_user.clerk_user_id,
             name=payload.name,
             default_wage_type=payload.default_wage_type,
+            default_salary_basis=payload.default_salary_basis,
             default_working_hours_per_day=payload.default_working_hours_per_day,
             default_overtime_multiplier=payload.default_overtime_multiplier,
             payroll_start_day=payload.payroll_start_day,
@@ -104,6 +105,7 @@ async def update_business(
             owner_id=current_user.clerk_user_id,
             name=payload.name,
             default_wage_type=payload.default_wage_type,
+            default_salary_basis=payload.default_salary_basis,
             default_working_hours_per_day=payload.default_working_hours_per_day,
             default_overtime_multiplier=payload.default_overtime_multiplier,
             payroll_start_day=payload.payroll_start_day,

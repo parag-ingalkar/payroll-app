@@ -1,6 +1,5 @@
-# from dataclasses import dataclass
-# from decimal import Decimal
 import re
+from enum import StrEnum
 
 
 def normalize_whitespace(value: str) -> str:
@@ -15,36 +14,23 @@ def normalize_business_name_for_lookup(value: str) -> str:
     return normalize_whitespace(value).lower()
 
 
-# @dataclass(frozen=True)
-# class BusinessName:
-#     value: str
-
-#     def __post_init__(self):
-#         normalized = normalize_whitespace(self.value)
-#         if not normalized:
-#             raise ValueError("Business name cannot be empty or whitespace.")
-#         object.__setattr__(self, "value", normalized)
-
-#     def lower(self) -> str:
-#         return self.value.lower()
-
-#     def __repr__(self) -> str:
-#         return self.value
+class WageType(StrEnum):
+    HOURLY = "hourly"
+    DAILY = "daily"
+    MONTHLY = "monthly"
 
 
-# @dataclass(frozen=True)
-# class WorkingHoursPerDay:
-#     value: Decimal
+class Weekday(StrEnum):
+    MONDAY = "monday"
+    TUESDAY = "tuesday"
+    WEDNESDAY = "wednesday"
+    THURSDAY = "thursday"
+    FRIDAY = "friday"
+    SATURDAY = "saturday"
+    SUNDAY = "sunday"
 
-#     def __post_init__(self):
-#         if self.value <= 0 or self.value > Decimal("24"):
-#             raise ValueError("Working hours per day must be > 0 and ≤ 24.")
 
-
-# @dataclass(frozen=True)
-# class OvertimeMultiplier:
-#     value: Decimal
-
-#     def __post_init__(self):
-#         if self.value < 1:
-#             raise ValueError("Overtime multiplier must be at least 1.")
+class SalaryBasis(StrEnum):
+    CALENDAR_DAYS = "calendar_days"
+    FIXED_30_DAYS = "fixed_30_days"
+    WORKING_26_DAYS = "working_26_days"

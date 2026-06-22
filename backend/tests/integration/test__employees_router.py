@@ -110,11 +110,10 @@ async def test__list_employees_filter_by_active(api_client, create_business_via_
     assert create_resp2.status_code == 201
     employee_id2 = create_resp2.json()["id"]
 
-    patch_resp = await api_client.patch(
-        f"{BASE_URL}/{business_id}/employees/{employee_id2}",
-        json={"is_active": False},
+    deactivate_resp = await api_client.patch(
+        f"{BASE_URL}/{business_id}/employees/{employee_id2}/deactivate",
     )
-    assert patch_resp.status_code == 200
+    assert deactivate_resp.status_code == 204
 
     active_resp = await api_client.get(
         f"{BASE_URL}/{business_id}/employees?is_active=true"
@@ -373,3 +372,85 @@ async def test__delete_employee_wrong_business_returns_404(
     assert resp.status_code == 404
     detail = resp.json()["detail"]
     assert detail["code"] == "business_not_found"
+
+
+# ─── Activate/Deactivate Employee ────────────────────────────────────────────
+
+
+@pytest.mark.asyncio
+async def test__deactivate_employee_happy_path(api_client, create_business_via_api):
+    business_id = await create_business_via_api()
+
+    create_resp = await api_client.post(
+        f"{BASE_URL}/{business_id}/employees",
+        json=_employee_payload(),
+    )
+    assert create_resp.status_code == 201
+    employee_id = create_resp.json()["id"]
+    assert create_resp.json()["is_active"] is True
+
+    deactivate_resp = await api_client.patch(
+        f"{BASE_URL}/{business_id}/employees/{employee_id}/deactivate",
+    )
+    assert deactivate_resp.status_code == 204
+
+    # Verify via GET
+    get_resp = await api_client.get(f"{BASE_URL}/{business_id}/employees/{employee_id}")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["is_active"] is False
+
+
+@pytest.mark.asyncio
+async def test__activate_employee_happy_path(api_client, create_business_via_api):
+    business_id = await create_business_via_api()
+
+    create_resp = await api_client.post(
+        f"{BASE_URL}/{business_id}/employees",
+        json=_employee_payload(),
+    )
+    assert create_resp.status_code == 201
+    employee_id = create_resp.json()["id"]
+
+    # Deactivate first
+    await api_client.patch(
+        f"{BASE_URL}/{business_id}/employees/{employee_id}/deactivate",
+    )
+
+    # Now activate
+    activate_resp = await api_client.patch(
+        f"{BASE_URL}/{business_id}/employees/{employee_id}/activate",
+    )
+    assert activate_resp.status_code == 204
+
+    # Verify via GET
+    get_resp = await api_client.get(f"{BASE_URL}/{business_id}/employees/{employee_id}")
+    assert get_resp.status_code == 200
+    assert get_resp.json()["is_active"] is True
+
+
+@pytest.mark.asyncio
+async def test__deactivate_employee_not_found_returns_404(
+    api_client, create_business_via_api
+):
+    business_id = await create_business_via_api()
+    nonexistent_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+
+    deactivate_resp = await api_client.patch(
+        f"{BASE_URL}/{business_id}/employees/{nonexistent_id}/deactivate",
+    )
+    assert deactivate_resp.status_code == 404
+    assert deactivate_resp.json()["detail"]["code"] == "employee_not_found"
+
+
+@pytest.mark.asyncio
+async def test__activate_employee_not_found_returns_404(
+    api_client, create_business_via_api
+):
+    business_id = await create_business_via_api()
+    nonexistent_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+
+    activate_resp = await api_client.patch(
+        f"{BASE_URL}/{business_id}/employees/{nonexistent_id}/activate",
+    )
+    assert activate_resp.status_code == 404
+    assert activate_resp.json()["detail"]["code"] == "employee_not_found"

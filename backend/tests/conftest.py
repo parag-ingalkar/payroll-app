@@ -19,10 +19,10 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.business.domain.entities import WageType, Weekday, WeeklyOffRule
+from app.business.domain.value_objects import SalaryBasis
 from app.core.db import Base, get_session_factory
 from app.core.uow import SqlAlchemyUnitOfWork
 from app.main import app
-
 
 pytest_plugins = ["anyio"]
 
@@ -116,6 +116,7 @@ def business_defaults() -> dict:
         "default_wage_type": WageType.HOURLY,
         "default_working_hours_per_day": Decimal("8.0"),
         "default_overtime_multiplier": Decimal("1.5"),
+        "default_salary_basis": SalaryBasis.WORKING_26_DAYS,
         "payroll_start_day": 1,
         "weekly_off_rules": [
             WeeklyOffRule(weekday=Weekday.MONDAY, week_of_month=None),

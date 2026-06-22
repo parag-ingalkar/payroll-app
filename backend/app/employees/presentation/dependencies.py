@@ -3,7 +3,9 @@ from fastapi import Depends
 from app.core.dependencies import get_uow
 from app.core.uow import SqlAlchemyUnitOfWork
 from app.employees.application.use_cases import (
+    ActivateEmployeeUseCase,
     CreateEmployeeUseCase,
+    DeactivateEmployeeUseCase,
     DeleteEmployeeUseCase,
     GetEmployeeByIdUseCase,
     ListEmployeesUseCase,
@@ -39,3 +41,15 @@ def get_delete_employee_use_case(
     uow: SqlAlchemyUnitOfWork = Depends(get_uow),
 ) -> DeleteEmployeeUseCase:
     return DeleteEmployeeUseCase(uow)
+
+
+def get_deactivate_employee_use_case(
+    uow: SqlAlchemyUnitOfWork = Depends(get_uow),
+) -> DeactivateEmployeeUseCase:
+    return DeactivateEmployeeUseCase(uow)
+
+
+def get_activate_employee_use_case(
+    uow: SqlAlchemyUnitOfWork = Depends(get_uow),
+) -> ActivateEmployeeUseCase:
+    return ActivateEmployeeUseCase(uow)

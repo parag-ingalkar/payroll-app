@@ -32,6 +32,7 @@ from app.attendance.domain.exceptions import (
     AttendanceOnHolidayError,
 )
 from app.business.domain.entities import WageType
+from app.business.domain.value_objects import SalaryBasis
 from app.employees.domain.entities import Employee
 
 ATTENDANCE_DATE = date(2026, 6, 10)
@@ -173,6 +174,7 @@ async def test__list_attendance_by_date(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         emp2 = Employee.create(
             id=uuid4(),
@@ -183,6 +185,7 @@ async def test__list_attendance_by_date(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         await uow.employees.add(emp1)
         await uow.employees.add(emp2)
@@ -238,6 +241,7 @@ async def test__list_attendance_by_date_status_filter(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         emp2 = Employee.create(
             id=uuid4(),
@@ -248,6 +252,7 @@ async def test__list_attendance_by_date_status_filter(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         await uow.employees.add(emp1)
         await uow.employees.add(emp2)
@@ -511,6 +516,7 @@ async def test__bulk_mark_attendance_creates_records(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         emp2 = Employee.create(
             id=uuid4(),
@@ -521,6 +527,7 @@ async def test__bulk_mark_attendance_creates_records(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         await uow.employees.add(emp1)
         await uow.employees.add(emp2)
@@ -635,6 +642,7 @@ async def test__mark_all_present(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         emp2 = Employee.create(
             id=uuid4(),
@@ -645,6 +653,7 @@ async def test__mark_all_present(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         inactive_emp = Employee.create(
             id=uuid4(),
@@ -655,6 +664,7 @@ async def test__mark_all_present(
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
         )
         inactive_emp.deactivate()
         await uow.employees.add(emp1)

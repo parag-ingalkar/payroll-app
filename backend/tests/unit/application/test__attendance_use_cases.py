@@ -38,6 +38,7 @@ from app.attendance.domain.exceptions import (
 )
 from app.business.domain.entities import WageType
 from app.business.domain.exceptions import BusinessNotFoundError
+from app.business.domain.value_objects import SalaryBasis
 from app.employees.domain.entities import Employee
 from app.employees.domain.exceptions import EmployeeNotFoundError
 
@@ -788,6 +789,7 @@ async def test__list_attendance_by_date_filters_by_status(
         name="Jane Doe",
         designation=None,
         wage_type=WageType.DAILY,
+        salary_basis=SalaryBasis.WORKING_26_DAYS,
         wage_rate=Decimal("800.00"),
         working_hours_per_day=Decimal("8.0"),
         overtime_multiplier=Decimal("1.5"),

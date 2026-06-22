@@ -8,7 +8,7 @@ from sqlalchemy import Boolean, Enum, ForeignKey, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.business.domain.entities import WageType
+from app.business.domain.value_objects import SalaryBasis, WageType
 from app.core.db import Base
 from app.employees.domain.entities import Employee
 
@@ -31,6 +31,10 @@ class EmployeeModel(Base):
     designation: Mapped[str | None] = mapped_column(String(255), nullable=True)
     wage_type: Mapped[WageType] = mapped_column(
         Enum(WageType, name="wage_type", native_enum=False),
+        nullable=False,
+    )
+    salary_basis: Mapped[SalaryBasis] = mapped_column(
+        Enum(SalaryBasis, name="salary_basis", native_enum=False),
         nullable=False,
     )
     wage_rate: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
@@ -56,6 +60,7 @@ class EmployeeModel(Base):
             name=employee.name,
             designation=employee.designation,
             wage_type=employee.wage_type,
+            salary_basis=employee.salary_basis,
             wage_rate=employee.wage_rate,
             working_hours_per_day=employee.working_hours_per_day,
             overtime_multiplier=employee.overtime_multiplier,
@@ -69,6 +74,7 @@ class EmployeeModel(Base):
             name=self.name,
             designation=self.designation,
             wage_type=self.wage_type,
+            salary_basis=self.salary_basis,
             wage_rate=self.wage_rate,
             working_hours_per_day=self.working_hours_per_day,
             overtime_multiplier=self.overtime_multiplier,

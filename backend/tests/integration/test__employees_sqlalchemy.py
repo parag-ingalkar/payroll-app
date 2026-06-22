@@ -5,15 +5,20 @@ from uuid import uuid4
 import pytest
 
 from app.business.domain.entities import WageType
+from app.business.domain.value_objects import SalaryBasis
 from app.employees.application.commands import (
+    ActivateEmployeeCommand,
     CreateEmployeeCommand,
+    DeactivateEmployeeCommand,
     DeleteEmployeeCommand,
     GetEmployeeByIdCommand,
     ListEmployeesCommand,
     UpdateEmployeeCommand,
 )
 from app.employees.application.use_cases import (
+    ActivateEmployeeUseCase,
     CreateEmployeeUseCase,
+    DeactivateEmployeeUseCase,
     DeleteEmployeeUseCase,
     GetEmployeeByIdUseCase,
     ListEmployeesUseCase,
@@ -40,6 +45,7 @@ async def test__create_employee(
         name="John Doe",
         designation="Engineer",
         wage_type=WageType.MONTHLY,
+        salary_basis=SalaryBasis.WORKING_26_DAYS,
         wage_rate=Decimal("50000.00"),
         working_hours_per_day=Decimal("8.0"),
         overtime_multiplier=Decimal("1.5"),
@@ -80,6 +86,7 @@ async def test__create_employee_uses_business_defaults(
         name="Alice",
         designation=None,
         wage_type=None,
+        salary_basis=None,
         wage_rate=Decimal("30000.00"),
         working_hours_per_day=None,
         overtime_multiplier=None,
@@ -113,6 +120,7 @@ async def test__list_employees(
             name="Alice",
             designation=None,
             wage_type=WageType.DAILY,
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
             wage_rate=Decimal("800.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("1.5"),
@@ -123,6 +131,7 @@ async def test__list_employees(
             name="Bob",
             designation="Manager",
             wage_type=WageType.HOURLY,
+            salary_basis=SalaryBasis.WORKING_26_DAYS,
             wage_rate=Decimal("100.00"),
             working_hours_per_day=Decimal("8.0"),
             overtime_multiplier=Decimal("2.0"),
@@ -225,7 +234,7 @@ async def test__update_employee_clears_designation(
 
 
 @pytest.mark.asyncio
-async def test__update_employee_deactivate(
+async def test__deactivate_employee(
     sqlalchemy_uow,
     add_employee_in_db,
     business_defaults,
@@ -233,17 +242,44 @@ async def test__update_employee_deactivate(
     employee = add_employee_in_db
     owner_id = business_defaults["owner_id"]
 
-    update_uc = UpdateEmployeeUseCase(sqlalchemy_uow)
-    cmd = UpdateEmployeeCommand(
+    deactivate_uc = DeactivateEmployeeUseCase(sqlalchemy_uow)
+    cmd = DeactivateEmployeeCommand(
         business_id=employee.business_id,
         owner_id=owner_id,
         employee_id=employee.id,
-        fields_to_update=frozenset({"is_active"}),
-        is_active=False,
     )
 
-    updated = await update_uc.execute(cmd)
+    updated = await deactivate_uc.execute(cmd)
+
     assert updated.is_active is False
+
+
+@pytest.mark.asyncio
+async def test__activate_employee(
+    sqlalchemy_uow,
+    add_employee_in_db,
+    business_defaults,
+):
+    employee = add_employee_in_db
+    owner_id = business_defaults["owner_id"]
+
+    # First deactivate
+    employee.deactivate()
+    async with sqlalchemy_uow as uow:
+        await uow.employees.update(employee)
+        await uow.commit()
+
+    # Now activate
+    activate_uc = ActivateEmployeeUseCase(sqlalchemy_uow)
+    cmd = ActivateEmployeeCommand(
+        business_id=employee.business_id,
+        owner_id=owner_id,
+        employee_id=employee.id,
+    )
+
+    updated = await activate_uc.execute(cmd)
+
+    assert updated.is_active is True
 
     async with sqlalchemy_uow as uow:
         reloaded = await uow.employees.get_by_business_and_id(
@@ -251,7 +287,7 @@ async def test__update_employee_deactivate(
             employee_id=employee.id,
         )
         assert reloaded is not None
-        assert reloaded.is_active is False
+        assert reloaded.is_active is True
 
 
 @pytest.mark.asyncio

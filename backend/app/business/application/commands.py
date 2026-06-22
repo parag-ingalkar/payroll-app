@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
-from app.business.domain.entities import WageType, Weekday
+from app.business.domain.value_objects import SalaryBasis, WageType, Weekday
 
 
 @dataclass(slots=True)
@@ -18,6 +18,7 @@ class CreateBusinessCommand:
     default_wage_type: WageType
     default_working_hours_per_day: Decimal
     default_overtime_multiplier: Decimal
+    default_salary_basis: SalaryBasis
     payroll_start_day: int
     weekly_off_rules: list[WeeklyOffRuleInput]
 
@@ -28,6 +29,7 @@ class UpdateBusinessCommand:
     owner_id: str
     name: str | None = None
     default_wage_type: WageType | None = None
+    default_salary_basis: SalaryBasis | None = None
     default_working_hours_per_day: Decimal | None = None
     default_overtime_multiplier: Decimal | None = None
     payroll_start_day: int | None = None

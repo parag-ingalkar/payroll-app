@@ -155,12 +155,11 @@ async def test__mark_attendance_inactive_employee_returns_400(
     business_id = await create_business_via_api()
     employee_id = await _create_employee(api_client, business_id)
 
-    # Deactivate employee via PATCH
-    patch_resp = await api_client.patch(
-        f"{BASE_URL}/{business_id}/employees/{employee_id}",
-        json={"is_active": False},
+    # Deactivate employee via dedicated endpoint
+    deactivate_resp = await api_client.patch(
+        f"{BASE_URL}/{business_id}/employees/{employee_id}/deactivate",
     )
-    assert patch_resp.status_code == 200
+    assert deactivate_resp.status_code == 204
 
     resp = await api_client.post(
         f"{BASE_URL}/{business_id}/attendance",

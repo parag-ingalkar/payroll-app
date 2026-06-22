@@ -1,13 +1,15 @@
 from decimal import Decimal
+
 import pytest
 
 from app.business.domain.entities import (
     Business,
-    WeeklyOffRule,
-    Weekday,
     WageType,
+    Weekday,
+    WeeklyOffRule,
 )
 from app.business.domain.exceptions import InvalidWeeklyOffRulesError
+from app.business.domain.value_objects import SalaryBasis
 
 
 def test__business_creation_with_valid_weekly_off_rules(business_defaults):
@@ -108,6 +110,7 @@ def test__invalid_business_name_on_creation():
             default_wage_type=WageType.HOURLY,
             default_working_hours_per_day=Decimal("8.0"),
             default_overtime_multiplier=Decimal("1.5"),
+            default_salary_basis=SalaryBasis.WORKING_26_DAYS,
             payroll_start_day=1,
             weekly_off_rules=[],
         )
@@ -122,6 +125,7 @@ def test__invalid_defaults_during_creation():
             default_wage_type=WageType.HOURLY,
             default_working_hours_per_day=Decimal("-1"),
             default_overtime_multiplier=Decimal("1.5"),
+            default_salary_basis=SalaryBasis.WORKING_26_DAYS,
             payroll_start_day=1,
             weekly_off_rules=[],
         )
@@ -134,6 +138,7 @@ def test__invalid_defaults_during_creation():
             default_wage_type=WageType.HOURLY,
             default_working_hours_per_day=Decimal("25"),
             default_overtime_multiplier=Decimal("1.5"),
+            default_salary_basis=SalaryBasis.WORKING_26_DAYS,
             payroll_start_day=1,
             weekly_off_rules=[],
         )
@@ -146,6 +151,7 @@ def test__invalid_defaults_during_creation():
             default_wage_type=WageType.HOURLY,
             default_working_hours_per_day=Decimal("8.0"),
             default_overtime_multiplier=Decimal("0.5"),
+            default_salary_basis=SalaryBasis.WORKING_26_DAYS,
             payroll_start_day=1,
             weekly_off_rules=[],
         )

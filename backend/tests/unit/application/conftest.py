@@ -10,7 +10,10 @@ from app.attendance.application.ports import AttendanceRepositoryPort
 from app.attendance.domain.entities import Attendance, AttendanceStatus
 from app.business.application.ports import BusinessRepositoryPort
 from app.business.domain.entities import Business, WageType
-from app.business.domain.value_objects import normalize_business_name_for_lookup
+from app.business.domain.value_objects import (
+    SalaryBasis,
+    normalize_business_name_for_lookup,
+)
 from app.core.uow import UnitOfWorkPort
 from app.employees.application.ports import EmployeeRepositoryPort
 from app.employees.domain.entities import Employee
@@ -324,6 +327,7 @@ def in_memory_employee_repo(
         name="John Doe",
         designation="Engineer",
         wage_type=WageType.MONTHLY,
+        salary_basis=SalaryBasis.WORKING_26_DAYS,
         wage_rate=Decimal("50000.00"),
         working_hours_per_day=Decimal("8.0"),
         overtime_multiplier=Decimal("1.5"),

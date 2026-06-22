@@ -3,12 +3,6 @@ from uuid import uuid4
 
 import pytest
 
-from app.business.domain.entities import WageType, Weekday
-from app.business.domain.exceptions import (
-    BusinessNotFoundError,
-    DuplicateBusinessError,
-    InvalidWeeklyOffRulesError,
-)
 from app.business.application.commands import (
     CreateBusinessCommand,
     ReplaceWeeklyOffRulesCommand,
@@ -22,6 +16,12 @@ from app.business.application.use_cases import (
     GetWeeklyOffRulesUseCase,
     ReplaceWeeklyOffRulesUseCase,
     UpdateBusinessUseCase,
+)
+from app.business.domain.entities import WageType, Weekday
+from app.business.domain.exceptions import (
+    BusinessNotFoundError,
+    DuplicateBusinessError,
+    InvalidWeeklyOffRulesError,
 )
 
 
@@ -46,6 +46,7 @@ async def test__create_business_happy_path(
             "default_working_hours_per_day"
         ],
         default_overtime_multiplier=business_defaults["default_overtime_multiplier"],
+        default_salary_basis=business_defaults["default_salary_basis"],
         payroll_start_day=business_defaults["payroll_start_day"],
         weekly_off_rules=weekly_off_rules,
     )
@@ -75,6 +76,7 @@ async def test__create_business_duplicate_name_raises_error(
             "default_working_hours_per_day"
         ],
         default_overtime_multiplier=business_defaults["default_overtime_multiplier"],
+        default_salary_basis=business_defaults["default_salary_basis"],
         payroll_start_day=business_defaults["payroll_start_day"],
         weekly_off_rules=[],
     )

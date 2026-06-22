@@ -3,16 +3,16 @@ from uuid import UUID
 
 from app.business.application.commands import (
     CreateBusinessCommand,
-    UpdateBusinessCommand,
     ReplaceWeeklyOffRulesCommand,
+    UpdateBusinessCommand,
 )
-from app.core.uow import UnitOfWorkPort
 from app.business.domain.entities import Business, WeeklyOffRule
 from app.business.domain.exceptions import (
     BusinessNotFoundError,
     DuplicateBusinessError,
 )
 from app.business.domain.value_objects import normalize_business_name_for_lookup
+from app.core.uow import UnitOfWorkPort
 
 
 class CreateBusinessUseCase:
@@ -42,6 +42,7 @@ class CreateBusinessUseCase:
                 default_wage_type=cmd.default_wage_type,
                 default_working_hours_per_day=cmd.default_working_hours_per_day,
                 default_overtime_multiplier=cmd.default_overtime_multiplier,
+                default_salary_basis=cmd.default_salary_basis,
                 payroll_start_day=cmd.payroll_start_day,
                 weekly_off_rules=weekly_off_rules,
             )
@@ -108,6 +109,7 @@ class UpdateBusinessUseCase:
                 default_wage_type=cmd.default_wage_type,
                 default_working_hours_per_day=cmd.default_working_hours_per_day,
                 default_overtime_multiplier=cmd.default_overtime_multiplier,
+                default_salary_basis=cmd.default_salary_basis,
                 payroll_start_day=cmd.payroll_start_day,
             )
 

@@ -4,21 +4,27 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import CurrentPrincipal, get_current_user
 from app.employees.application.commands import (
+    ActivateEmployeeCommand,
     CreateEmployeeCommand,
+    DeactivateEmployeeCommand,
     DeleteEmployeeCommand,
     GetEmployeeByIdCommand,
     ListEmployeesCommand,
     UpdateEmployeeCommand,
 )
 from app.employees.application.use_cases import (
+    ActivateEmployeeUseCase,
     CreateEmployeeUseCase,
+    DeactivateEmployeeUseCase,
     DeleteEmployeeUseCase,
     GetEmployeeByIdUseCase,
     ListEmployeesUseCase,
     UpdateEmployeeUseCase,
 )
 from app.employees.presentation.dependencies import (
+    get_activate_employee_use_case,
     get_create_employee_use_case,
+    get_deactivate_employee_use_case,
     get_delete_employee_use_case,
     get_get_employee_by_id_use_case,
     get_list_employees_use_case,
@@ -51,6 +57,7 @@ async def create_employee(
         name=payload.name,
         designation=payload.designation,
         wage_type=payload.wage_type,
+        salary_basis=payload.salary_basis,
         wage_rate=payload.wage_rate,
         working_hours_per_day=payload.working_hours_per_day,
         overtime_multiplier=payload.overtime_multiplier,
@@ -125,10 +132,10 @@ async def update_employee(
         name=payload.name,
         designation=payload.designation,
         wage_type=payload.wage_type,
+        salary_basis=payload.salary_basis,
         wage_rate=payload.wage_rate,
         working_hours_per_day=payload.working_hours_per_day,
         overtime_multiplier=payload.overtime_multiplier,
-        is_active=payload.is_active,
     )
     employee = await use_case.execute(cmd)
     return EmployeeRead.model_validate(employee)
@@ -145,6 +152,38 @@ async def delete_employee(
     use_case: DeleteEmployeeUseCase = Depends(get_delete_employee_use_case),
 ) -> None:
     cmd = DeleteEmployeeCommand(
+        business_id=business_id,
+        owner_id=current_user.clerk_user_id,
+        employee_id=employee_id,
+    )
+    await use_case.execute(cmd)
+    return None
+
+
+@router.patch("/{employee_id}/deactivate", status_code=status.HTTP_204_NO_CONTENT)
+async def deactivate_employee(
+    business_id: UUID,
+    employee_id: UUID,
+    current_user: CurrentPrincipal = Depends(get_current_user),
+    use_case: DeactivateEmployeeUseCase = Depends(get_deactivate_employee_use_case),
+) -> None:
+    cmd = DeactivateEmployeeCommand(
+        business_id=business_id,
+        owner_id=current_user.clerk_user_id,
+        employee_id=employee_id,
+    )
+    await use_case.execute(cmd)
+    return None
+
+
+@router.patch("/{employee_id}/activate", status_code=status.HTTP_204_NO_CONTENT)
+async def activate_employee(
+    business_id: UUID,
+    employee_id: UUID,
+    current_user: CurrentPrincipal = Depends(get_current_user),
+    use_case: ActivateEmployeeUseCase = Depends(get_activate_employee_use_case),
+) -> None:
+    cmd = ActivateEmployeeCommand(
         business_id=business_id,
         owner_id=current_user.clerk_user_id,
         employee_id=employee_id,

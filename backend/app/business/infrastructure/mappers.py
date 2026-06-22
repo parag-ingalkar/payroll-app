@@ -14,6 +14,7 @@ def business_model_to_domain(model: BusinessModel) -> Business:
         default_wage_type=model.default_wage_type,
         default_working_hours_per_day=model.default_working_hours_per_day,
         default_overtime_multiplier=model.default_overtime_multiplier,
+        default_salary_basis=model.default_salary_basis,
         payroll_start_day=model.payroll_start_day,
         weekly_off_rules=[
             WeeklyOffRule(
@@ -39,6 +40,7 @@ def business_domain_to_model(domain: Business) -> BusinessModel:
         normalized_name=normalized_lookup_name,
         default_wage_type=domain.default_wage_type,
         default_working_hours_per_day=domain.default_working_hours_per_day,
+        default_salary_basis=domain.default_salary_basis,
         default_overtime_multiplier=domain.default_overtime_multiplier,
         payroll_start_day=domain.payroll_start_day,
     )

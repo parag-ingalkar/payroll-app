@@ -6,15 +6,20 @@ import pytest
 
 from app.business.domain.entities import WageType
 from app.business.domain.exceptions import BusinessNotFoundError
+from app.business.domain.value_objects import SalaryBasis
 from app.employees.application.commands import (
+    ActivateEmployeeCommand,
     CreateEmployeeCommand,
+    DeactivateEmployeeCommand,
     DeleteEmployeeCommand,
     GetEmployeeByIdCommand,
     ListEmployeesCommand,
     UpdateEmployeeCommand,
 )
 from app.employees.application.use_cases import (
+    ActivateEmployeeUseCase,
     CreateEmployeeUseCase,
+    DeactivateEmployeeUseCase,
     DeleteEmployeeUseCase,
     GetEmployeeByIdUseCase,
     ListEmployeesUseCase,
@@ -32,6 +37,7 @@ def _create_cmd(business_id, owner_id, **overrides) -> CreateEmployeeCommand:
         name=overrides.get("name", "Jane Smith"),
         designation=overrides.get("designation", "Analyst"),
         wage_type=overrides.get("wage_type", None),  # should use business default
+        salary_basis=overrides.get("salary_basis", None),  # should use business default
         wage_rate=overrides.get("wage_rate", Decimal("40000.00")),
         working_hours_per_day=overrides.get(
             "working_hours_per_day", None
@@ -69,7 +75,7 @@ async def test__create_employee_uses_business_defaults(
     in_memory_uow,
     in_memory_business_repo,
 ):
-    """When wage_type, working_hours_per_day, overtime_multiplier are None,
+    """When wage_type, salary_basis, working_hours_per_day, overtime_multiplier are None,
     the business defaults should be applied."""
     business = in_memory_business_repo._items[0]
     owner_id = business_defaults["owner_id"]
@@ -79,6 +85,7 @@ async def test__create_employee_uses_business_defaults(
         business.id,
         owner_id,
         wage_type=None,
+        salary_basis=None,
         working_hours_per_day=None,
         overtime_multiplier=None,
     )
@@ -86,6 +93,7 @@ async def test__create_employee_uses_business_defaults(
     employee = await use_case.execute(cmd)
 
     assert employee.wage_type == business_defaults["default_wage_type"]
+    assert employee.salary_basis == business_defaults["default_salary_basis"]
     assert (
         employee.working_hours_per_day
         == business_defaults["default_working_hours_per_day"]
@@ -172,6 +180,7 @@ async def test__list_employees_filter_by_active(
         name="Inactive Person",
         designation=None,
         wage_type=WageType.DAILY,
+        salary_basis=SalaryBasis.WORKING_26_DAYS,
         wage_rate=Decimal("800.00"),
         working_hours_per_day=Decimal("8.0"),
         overtime_multiplier=Decimal("1.5"),
@@ -293,30 +302,8 @@ async def test__update_employee_clears_designation(
     assert updated.designation is None
 
 
-@pytest.mark.asyncio
-async def test__update_employee_deactivate(
-    business_defaults,
-    in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-):
-    business = in_memory_business_repo._items[0]
-    owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
-
-    use_case = UpdateEmployeeUseCase(uow=in_memory_uow)
-    cmd = UpdateEmployeeCommand(
-        business_id=business.id,
-        owner_id=owner_id,
-        employee_id=employee.id,
-        fields_to_update=frozenset({"is_active"}),
-        is_active=False,
-    )
-
-    updated = await use_case.execute(cmd)
-
-    assert updated.is_active is False
-    assert in_memory_uow.committed is True
+# Test removed: is_active should not be updateable via PATCH.
+# Use dedicated activate/deactivate endpoints instead.
 
 
 @pytest.mark.asyncio
@@ -513,3 +500,201 @@ async def test__delete_employee_wrong_owner_raises_error(
 
     assert "not found for owner" in str(exc_info.value)
     assert in_memory_uow.committed is False
+
+
+@pytest.mark.asyncio
+async def test__deactivate_employee_happy_path(
+    business_defaults,
+    in_memory_uow,
+    in_memory_business_repo,
+    in_memory_employee_repo,
+):
+    business = in_memory_business_repo._items[0]
+    owner_id = business_defaults["owner_id"]
+    employee = in_memory_employee_repo._items[0]
+
+    assert employee.is_active is True
+
+    use_case = DeactivateEmployeeUseCase(uow=in_memory_uow)
+    cmd = DeactivateEmployeeCommand(
+        business_id=business.id,
+        owner_id=owner_id,
+        employee_id=employee.id,
+    )
+
+    updated = await use_case.execute(cmd)
+
+    assert updated.is_active is False
+    assert in_memory_uow.committed is True
+
+
+@pytest.mark.asyncio
+async def test__deactivate_employee_idempotent(
+    business_defaults,
+    in_memory_uow,
+    in_memory_business_repo,
+    in_memory_employee_repo,
+):
+    """Deactivating an already inactive employee should be idempotent."""
+    business = in_memory_business_repo._items[0]
+    owner_id = business_defaults["owner_id"]
+    employee = in_memory_employee_repo._items[0]
+
+    employee.deactivate()
+    assert employee.is_active is False
+
+    use_case = DeactivateEmployeeUseCase(uow=in_memory_uow)
+    cmd = DeactivateEmployeeCommand(
+        business_id=business.id,
+        owner_id=owner_id,
+        employee_id=employee.id,
+    )
+
+    updated = await use_case.execute(cmd)
+
+    assert updated.is_active is False
+    # Should not commit if already inactive (optimization)
+    assert in_memory_uow.committed is False
+
+
+@pytest.mark.asyncio
+async def test__deactivate_employee_wrong_owner_raises_error(
+    business_defaults,
+    in_memory_uow,
+    in_memory_business_repo,
+    in_memory_employee_repo,
+):
+    business = in_memory_business_repo._items[0]
+    employee = in_memory_employee_repo._items[0]
+
+    use_case = DeactivateEmployeeUseCase(uow=in_memory_uow)
+    cmd = DeactivateEmployeeCommand(
+        business_id=business.id,
+        owner_id="wrong-owner",
+        employee_id=employee.id,
+    )
+
+    with pytest.raises(BusinessNotFoundError):
+        await use_case.execute(cmd)
+
+
+@pytest.mark.asyncio
+async def test__deactivate_employee_not_found_raises_error(
+    business_defaults,
+    in_memory_uow,
+    in_memory_business_repo,
+    in_memory_employee_repo,
+):
+    from uuid import uuid4
+
+    business = in_memory_business_repo._items[0]
+    owner_id = business_defaults["owner_id"]
+
+    use_case = DeactivateEmployeeUseCase(uow=in_memory_uow)
+    cmd = DeactivateEmployeeCommand(
+        business_id=business.id,
+        owner_id=owner_id,
+        employee_id=uuid4(),
+    )
+
+    with pytest.raises(EmployeeNotFoundError):
+        await use_case.execute(cmd)
+
+
+@pytest.mark.asyncio
+async def test__activate_employee_happy_path(
+    business_defaults,
+    in_memory_uow,
+    in_memory_business_repo,
+    in_memory_employee_repo,
+):
+    business = in_memory_business_repo._items[0]
+    owner_id = business_defaults["owner_id"]
+    employee = in_memory_employee_repo._items[0]
+
+    employee.deactivate()
+    assert employee.is_active is False
+
+    use_case = ActivateEmployeeUseCase(uow=in_memory_uow)
+    cmd = ActivateEmployeeCommand(
+        business_id=business.id,
+        owner_id=owner_id,
+        employee_id=employee.id,
+    )
+
+    updated = await use_case.execute(cmd)
+
+    assert updated.is_active is True
+    assert in_memory_uow.committed is True
+
+
+@pytest.mark.asyncio
+async def test__activate_employee_idempotent(
+    business_defaults,
+    in_memory_uow,
+    in_memory_business_repo,
+    in_memory_employee_repo,
+):
+    """Activating an already active employee should be idempotent."""
+    business = in_memory_business_repo._items[0]
+    owner_id = business_defaults["owner_id"]
+    employee = in_memory_employee_repo._items[0]
+
+    assert employee.is_active is True
+
+    use_case = ActivateEmployeeUseCase(uow=in_memory_uow)
+    cmd = ActivateEmployeeCommand(
+        business_id=business.id,
+        owner_id=owner_id,
+        employee_id=employee.id,
+    )
+
+    updated = await use_case.execute(cmd)
+
+    assert updated.is_active is True
+    # Should not commit if already active (optimization)
+    assert in_memory_uow.committed is False
+
+
+@pytest.mark.asyncio
+async def test__activate_employee_wrong_owner_raises_error(
+    business_defaults,
+    in_memory_uow,
+    in_memory_business_repo,
+    in_memory_employee_repo,
+):
+    business = in_memory_business_repo._items[0]
+    employee = in_memory_employee_repo._items[0]
+
+    use_case = ActivateEmployeeUseCase(uow=in_memory_uow)
+    cmd = ActivateEmployeeCommand(
+        business_id=business.id,
+        owner_id="wrong-owner",
+        employee_id=employee.id,
+    )
+
+    with pytest.raises(BusinessNotFoundError):
+        await use_case.execute(cmd)
+
+
+@pytest.mark.asyncio
+async def test__activate_employee_not_found_raises_error(
+    business_defaults,
+    in_memory_uow,
+    in_memory_business_repo,
+    in_memory_employee_repo,
+):
+    from uuid import uuid4
+
+    business = in_memory_business_repo._items[0]
+    owner_id = business_defaults["owner_id"]
+
+    use_case = ActivateEmployeeUseCase(uow=in_memory_uow)
+    cmd = ActivateEmployeeCommand(
+        business_id=business.id,
+        owner_id=owner_id,
+        employee_id=uuid4(),
+    )
+
+    with pytest.raises(EmployeeNotFoundError):
+        await use_case.execute(cmd)

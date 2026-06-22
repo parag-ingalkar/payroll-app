@@ -16,7 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.business.domain.entities import WageType, Weekday
+from app.business.domain.value_objects import SalaryBasis, WageType, Weekday
 from app.core.db import Base
 
 if TYPE_CHECKING:
@@ -52,6 +52,11 @@ class BusinessModel(Base):
     default_overtime_multiplier: Mapped[Decimal] = mapped_column(
         Numeric(5, 2),
         nullable=False,
+    )
+    default_salary_basis: Mapped[SalaryBasis] = mapped_column(
+        Enum(SalaryBasis, name="salary_basis", native_enum=False),
+        nullable=False,
+        server_default="working_26_days",  # or "calendar_days"
     )
     payroll_start_day: Mapped[int] = mapped_column(
         Integer,

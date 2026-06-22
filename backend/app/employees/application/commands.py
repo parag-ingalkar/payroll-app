@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
-from app.business.domain.entities import WageType
+from app.business.domain.value_objects import SalaryBasis, WageType
 
 
 @dataclass(slots=True)
@@ -13,6 +13,7 @@ class CreateEmployeeCommand:
     name: str
     designation: str | None
     wage_type: WageType | None
+    salary_basis: SalaryBasis | None
     wage_rate: Decimal
     working_hours_per_day: Decimal | None
     overtime_multiplier: Decimal | None
@@ -41,10 +42,22 @@ class UpdateEmployeeCommand:
     name: str | None = None
     designation: str | None = None
     wage_type: WageType | None = None
+    salary_basis: SalaryBasis | None = None
     wage_rate: Decimal | None = None
     working_hours_per_day: Decimal | None = None
     overtime_multiplier: Decimal | None = None
-    is_active: bool | None = None
+
+
+@dataclass(slots=True)
+class DeactivateEmployeeCommand:
+    business_id: UUID
+    owner_id: str
+    employee_id: UUID
+
+
+@dataclass(slots=True)
+class ActivateEmployeeCommand(DeactivateEmployeeCommand):
+    pass
 
 
 @dataclass(slots=True)

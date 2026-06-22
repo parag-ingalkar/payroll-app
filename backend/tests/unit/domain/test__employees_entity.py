@@ -5,6 +5,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from app.business.domain.entities import WageType
+from app.business.domain.value_objects import SalaryBasis
 from app.employees.domain.entities import Employee
 from app.employees.domain.exceptions import InvalidEmployeeNameError
 
@@ -18,6 +19,7 @@ def _make_employee(**overrides) -> Employee:
         name=overrides.get("name", "John Doe"),
         designation=overrides.get("designation", "Engineer"),
         wage_type=overrides.get("wage_type", WageType.MONTHLY),
+        salary_basis=overrides.get("salary_basis", SalaryBasis.WORKING_26_DAYS),
         wage_rate=overrides.get("wage_rate", Decimal("50000.00")),
         working_hours_per_day=overrides.get("working_hours_per_day", Decimal("8.0")),
         overtime_multiplier=overrides.get("overtime_multiplier", Decimal("1.5")),

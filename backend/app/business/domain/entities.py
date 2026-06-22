@@ -2,27 +2,15 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from enum import Enum
 from uuid import UUID, uuid4
 
-from .exceptions import InvalidWeeklyOffRulesError
-from .value_objects import normalize_whitespace
-
-
-class WageType(Enum):
-    HOURLY = "hourly"
-    DAILY = "daily"
-    MONTHLY = "monthly"
-
-
-class Weekday(Enum):
-    MONDAY = "monday"
-    TUESDAY = "tuesday"
-    WEDNESDAY = "wednesday"
-    THURSDAY = "thursday"
-    FRIDAY = "friday"
-    SATURDAY = "saturday"
-    SUNDAY = "sunday"
+from app.business.domain.exceptions import InvalidWeeklyOffRulesError
+from app.business.domain.value_objects import (
+    SalaryBasis,
+    WageType,
+    Weekday,
+    normalize_whitespace,
+)
 
 
 @dataclass
@@ -40,6 +28,7 @@ class Business:
     default_wage_type: WageType
     default_working_hours_per_day: Decimal
     default_overtime_multiplier: Decimal
+    default_salary_basis: SalaryBasis
     payroll_start_day: int = 1
     weekly_off_rules: list[WeeklyOffRule] = field(default_factory=list)
     id: UUID = field(default_factory=uuid4)
@@ -123,6 +112,7 @@ class Business:
         default_wage_type: WageType | None = None,
         default_working_hours_per_day: Decimal | None = None,
         default_overtime_multiplier: Decimal | None = None,
+        default_salary_basis: SalaryBasis | None = None,
         payroll_start_day: int | None = None,
     ) -> None:
         if default_wage_type is not None:
@@ -136,6 +126,8 @@ class Business:
         if payroll_start_day is not None:
             self.payroll_start_day = payroll_start_day
             self._validate_payroll_start_day()
+        if default_salary_basis is not None:
+            self.default_salary_basis = default_salary_basis
 
     @classmethod
     def create(
@@ -145,6 +137,7 @@ class Business:
         default_wage_type: WageType,
         default_working_hours_per_day: Decimal,
         default_overtime_multiplier: Decimal,
+        default_salary_basis: SalaryBasis,
         payroll_start_day: int,
         weekly_off_rules: list[WeeklyOffRule],
     ) -> "Business":
@@ -158,6 +151,7 @@ class Business:
             default_wage_type=default_wage_type,
             default_working_hours_per_day=default_working_hours_per_day,
             default_overtime_multiplier=default_overtime_multiplier,
+            default_salary_basis=default_salary_basis,
             payroll_start_day=payroll_start_day,
             weekly_off_rules=weekly_off_rules,
         )

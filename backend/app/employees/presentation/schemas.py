@@ -3,13 +3,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.business.domain.entities import WageType
+from app.business.domain.value_objects import SalaryBasis, WageType
 
 
 class EmployeeCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     designation: str | None = Field(default=None, max_length=255)
     wage_type: WageType | None = None
+    salary_basis: SalaryBasis | None = None
     wage_rate: Decimal = Field(..., gt=0)
     working_hours_per_day: Decimal | None = Field(default=None, gt=0)
     overtime_multiplier: Decimal | None = Field(default=None, gt=0)
@@ -35,10 +36,10 @@ class EmployeeUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=255)
     designation: str | None = None
     wage_type: WageType | None = None
+    salary_basis: SalaryBasis | None = None
     wage_rate: Decimal | None = Field(default=None, gt=0)
     working_hours_per_day: Decimal | None = Field(default=None, gt=0)
     overtime_multiplier: Decimal | None = Field(default=None, gt=0)
-    is_active: bool | None = None
 
     @field_validator("name")
     @classmethod
@@ -66,6 +67,7 @@ class EmployeeRead(BaseModel):
     designation: str | None
     wage_type: WageType
     wage_rate: Decimal
+    salary_basis: SalaryBasis
     working_hours_per_day: Decimal
     overtime_multiplier: Decimal
     is_active: bool

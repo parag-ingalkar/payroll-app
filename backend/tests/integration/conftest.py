@@ -7,6 +7,7 @@ import pytest
 
 from app.attendance.domain.entities import Attendance, AttendanceStatus
 from app.business.domain.entities import Business, WageType
+from app.business.domain.value_objects import SalaryBasis
 from app.core.uow import SqlAlchemyUnitOfWork
 from app.employees.domain.entities import Employee
 from app.holidays.domain.entities import Holiday
@@ -22,6 +23,7 @@ async def create_business_via_api(api_client, business_defaults):
             json={
                 "name": business_defaults["name"],
                 "default_wage_type": business_defaults["default_wage_type"].value,
+                "default_salary_basis": business_defaults["default_salary_basis"].value,
                 "default_working_hours_per_day": "8.0",
                 "default_overtime_multiplier": "1.5",
                 "payroll_start_day": 1,
@@ -72,6 +74,7 @@ async def add_employee_in_db(
         name="John Doe",
         designation="Engineer",
         wage_type=WageType.MONTHLY,
+        salary_basis=SalaryBasis.WORKING_26_DAYS,
         wage_rate=Decimal("50000.00"),
         working_hours_per_day=Decimal("8.0"),
         overtime_multiplier=Decimal("1.5"),

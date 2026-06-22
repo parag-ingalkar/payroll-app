@@ -8,6 +8,7 @@ async def test__create_business(api_client, business_defaults):
         json={
             "name": business_defaults["name"],
             "default_wage_type": business_defaults["default_wage_type"].value,
+            "default_salary_basis": business_defaults["default_salary_basis"].value,
             "default_working_hours_per_day": "8.0",
             "default_overtime_multiplier": "1.5",
             "payroll_start_day": 1,
@@ -25,6 +26,7 @@ async def test__get_business(api_client, business_defaults):
         json={
             "name": business_defaults["name"],
             "default_wage_type": business_defaults["default_wage_type"].value,
+            "default_salary_basis": business_defaults["default_salary_basis"].value,
             "default_working_hours_per_day": "8.0",
             "default_overtime_multiplier": "1.5",
             "payroll_start_day": 1,
@@ -51,6 +53,7 @@ async def test__list_businesses(api_client, business_defaults):
         json={
             "name": business_defaults["name"],
             "default_wage_type": business_defaults["default_wage_type"].value,
+            "default_salary_basis": business_defaults["default_salary_basis"].value,
             "default_working_hours_per_day": "8.0",
             "default_overtime_multiplier": "1.5",
             "payroll_start_day": 1,
@@ -76,6 +79,7 @@ async def test__get_weekly_off_rules(api_client, business_defaults):
         json={
             "name": business_defaults["name"],
             "default_wage_type": business_defaults["default_wage_type"].value,
+            "default_salary_basis": business_defaults["default_salary_basis"].value,
             "default_working_hours_per_day": "8.0",
             "default_overtime_multiplier": "1.5",
             "payroll_start_day": 1,
@@ -112,6 +116,7 @@ async def test__replace_weekly_off_rules(api_client, business_defaults):
         json={
             "name": business_defaults["name"],
             "default_wage_type": business_defaults["default_wage_type"].value,
+            "default_salary_basis": business_defaults["default_salary_basis"].value,
             "default_working_hours_per_day": "8.0",
             "default_overtime_multiplier": "1.5",
             "payroll_start_day": 1,
@@ -159,6 +164,7 @@ async def test__update_business(api_client, business_defaults):
         json={
             "name": business_defaults["name"],
             "default_wage_type": business_defaults["default_wage_type"].value,
+            "default_salary_basis": business_defaults["default_salary_basis"].value,
             "default_working_hours_per_day": "8.0",
             "default_overtime_multiplier": "1.5",
             "payroll_start_day": 1,
@@ -196,6 +202,7 @@ async def test__delete_business(api_client, business_defaults):
         json={
             "name": business_defaults["name"],
             "default_wage_type": business_defaults["default_wage_type"].value,
+            "default_salary_basis": business_defaults["default_salary_basis"].value,
             "default_working_hours_per_day": "8.0",
             "default_overtime_multiplier": "1.5",
             "payroll_start_day": 1,

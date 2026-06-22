@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from app.business.domain.exceptions import BusinessNotFoundError
 from app.core.uow import UnitOfWorkPort
 from app.employees.application.commands import (
+    ActivateEmployeeCommand,
     CreateEmployeeCommand,
+    DeactivateEmployeeCommand,
     DeleteEmployeeCommand,
     GetEmployeeByIdCommand,
     ListEmployeesCommand,
@@ -34,6 +36,11 @@ class CreateEmployeeUseCase:
                 if cmd.wage_type is not None
                 else business.default_wage_type
             )
+            salary_basis = (
+                cmd.salary_basis
+                if cmd.salary_basis is not None
+                else business.default_salary_basis
+            )
             working_hours_per_day = (
                 cmd.working_hours_per_day
                 if cmd.working_hours_per_day is not None
@@ -51,6 +58,7 @@ class CreateEmployeeUseCase:
                 name=cmd.name,
                 designation=cmd.designation,
                 wage_type=wage_type,
+                salary_basis=salary_basis,
                 wage_rate=cmd.wage_rate,
                 working_hours_per_day=working_hours_per_day,
                 overtime_multiplier=overtime_multiplier,
@@ -128,39 +136,86 @@ class UpdateEmployeeUseCase:
                     employee_id=str(cmd.employee_id),
                 )
 
-            if "name" in cmd.fields_to_update and cmd.name is not None:
-                employee.rename(cmd.name)
-
+            kwargs = {}
+            if "name" in cmd.fields_to_update:
+                kwargs["name"] = cmd.name
             if "designation" in cmd.fields_to_update:
-                # cmd.designation may be None to clear the field
-                employee.designation = cmd.designation
+                kwargs["designation"] = cmd.designation
+            if "wage_type" in cmd.fields_to_update:
+                kwargs["wage_type"] = cmd.wage_type
+            if "salary_basis" in cmd.fields_to_update:
+                kwargs["salary_basis"] = cmd.salary_basis
+            if "wage_rate" in cmd.fields_to_update:
+                kwargs["wage_rate"] = cmd.wage_rate
+            if "working_hours_per_day" in cmd.fields_to_update:
+                kwargs["working_hours_per_day"] = cmd.working_hours_per_day
+            if "overtime_multiplier" in cmd.fields_to_update:
+                kwargs["overtime_multiplier"] = cmd.overtime_multiplier
 
-            if "wage_type" in cmd.fields_to_update and cmd.wage_type is not None:
-                employee.wage_type = cmd.wage_type
-
-            if "wage_rate" in cmd.fields_to_update and cmd.wage_rate is not None:
-                employee.wage_rate = cmd.wage_rate
-
-            if (
-                "working_hours_per_day" in cmd.fields_to_update
-                and cmd.working_hours_per_day is not None
-            ):
-                employee.working_hours_per_day = cmd.working_hours_per_day
-
-            if (
-                "overtime_multiplier" in cmd.fields_to_update
-                and cmd.overtime_multiplier is not None
-            ):
-                employee.overtime_multiplier = cmd.overtime_multiplier
-
-            if "is_active" in cmd.fields_to_update and cmd.is_active is not None:
-                if cmd.is_active:
-                    employee.activate()
-                else:
-                    employee.deactivate()
+            employee.update_details(**kwargs)
 
             await uow.employees.update(employee)
             await uow.commit()
+            return employee
+
+
+@dataclass
+class DeactivateEmployeeUseCase:
+    uow: UnitOfWorkPort
+
+    async def execute(self, cmd: DeactivateEmployeeCommand) -> Employee:
+        async with self.uow as uow:
+            business = await uow.businesses.get_by_id_and_owner(
+                business_id=cmd.business_id, owner_id=cmd.owner_id
+            )
+            if not business:
+                raise BusinessNotFoundError(
+                    f"Business with id {cmd.business_id} not found for owner {cmd.owner_id}."
+                )
+
+            employee = await uow.employees.get_by_business_and_id(
+                business_id=cmd.business_id, employee_id=cmd.employee_id
+            )
+            if not employee:
+                raise EmployeeNotFoundError(
+                    business_id=str(cmd.business_id),
+                    employee_id=str(cmd.employee_id),
+                )
+
+            if employee.is_active:
+                employee.deactivate()
+                await uow.employees.update(employee)
+                await uow.commit()
+            return employee
+
+
+@dataclass
+class ActivateEmployeeUseCase:
+    uow: UnitOfWorkPort
+
+    async def execute(self, cmd: ActivateEmployeeCommand) -> Employee:
+        async with self.uow as uow:
+            business = await uow.businesses.get_by_id_and_owner(
+                business_id=cmd.business_id, owner_id=cmd.owner_id
+            )
+            if not business:
+                raise BusinessNotFoundError(
+                    f"Business with id {cmd.business_id} not found for owner {cmd.owner_id}."
+                )
+
+            employee = await uow.employees.get_by_business_and_id(
+                business_id=cmd.business_id, employee_id=cmd.employee_id
+            )
+            if not employee:
+                raise EmployeeNotFoundError(
+                    business_id=str(cmd.business_id),
+                    employee_id=str(cmd.employee_id),
+                )
+
+            if not employee.is_active:
+                employee.activate()
+                await uow.employees.update(employee)
+                await uow.commit()
             return employee
 
 
