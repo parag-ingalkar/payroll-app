@@ -18,7 +18,7 @@ def register_business_exception_handlers(app):
             content={
                 "detail": {
                     "code": "business_not_found",
-                    "message": str(exc) or "Business not found.",
+                    "message": "Business not found.",
                 }
             },
         )

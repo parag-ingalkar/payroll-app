@@ -146,4 +146,8 @@ class GetHolidayByDateUseCase:
             holiday = await uow.holidays.get_by_business_and_date(
                 business_id=cmd.business_id, date_=cmd.date
             )
+            if not holiday:
+                raise HolidayNotFoundError(
+                    business_id=str(cmd.business_id), date=str(cmd.date)
+                )
             return holiday

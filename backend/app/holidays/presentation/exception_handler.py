@@ -20,7 +20,7 @@ def register_holiday_exception_handlers(app):
             content={
                 "detail": {
                     "code": "holiday_not_found",
-                    "message": str(exc) or "Holiday not found.",
+                    "message": "Holiday not found.",
                 }
             },
         )
@@ -35,8 +35,7 @@ def register_holiday_exception_handlers(app):
             content={
                 "detail": {
                     "code": "holiday_already_exists",
-                    "message": str(exc)
-                    or "A holiday already exists for this business on this date.",
+                    "message": "A holiday already exists for this business on this date.",
                     "fields": ["date"],
                 }
             },
@@ -52,7 +51,7 @@ def register_holiday_exception_handlers(app):
             content={
                 "detail": {
                     "code": "invalid_holiday_name",
-                    "message": str(exc) or "Holiday name is invalid.",
+                    "message": "Holiday name is invalid.",
                     "fields": ["name"],
                 }
             },

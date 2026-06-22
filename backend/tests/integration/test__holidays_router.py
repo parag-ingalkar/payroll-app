@@ -107,7 +107,7 @@ async def test__get_holiday_by_date_not_found_returns_404(
     )
     assert resp.status_code == 404
     # Router raises HTTPException("Holiday not found") when business exists but holiday doesn’t
-    assert resp.json()["detail"] == "Holiday not found"
+    assert resp.json()["detail"]["message"] == "Holiday not found."
 
 
 @pytest.mark.asyncio
@@ -164,7 +164,7 @@ async def test__update_holiday_without_fields_returns_400(
         json={},
     )
     assert patch_resp.status_code == 400
-    assert patch_resp.json()["detail"] == "No fields to update"
+    assert patch_resp.json()["detail"]["message"] == "No fields to update."
 
 
 @pytest.mark.asyncio
@@ -177,7 +177,7 @@ async def test__update_holiday_not_found_returns_404(api_client, business_defaul
     )
     assert patch_resp.status_code == 404
     # HolidayNotFoundError -> router-level 404 "Holiday not found"
-    assert patch_resp.json()["detail"] == "Holiday not found"
+    assert patch_resp.json()["detail"]["message"] == "Holiday not found."
 
 
 @pytest.mark.asyncio
@@ -198,6 +198,7 @@ async def test__delete_holiday_happy_path(api_client, business_defaults):
         f"{BASE_URL}/{business_id}/holidays/2026-01-01",
     )
     assert get_resp.status_code == 404
+    assert get_resp.json()["detail"]["message"] == "Holiday not found."
 
 
 @pytest.mark.asyncio
@@ -228,3 +229,4 @@ async def test__holiday_routes_respect_business_ownership(
     detail = list_resp.json()["detail"]
     # This comes from BusinessNotFoundError handler
     assert detail["code"] == "business_not_found"
+    assert detail["message"] == "Business not found."

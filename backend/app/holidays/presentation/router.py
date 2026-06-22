@@ -18,7 +18,6 @@ from app.holidays.application.use_cases import (
     DeleteHolidayUseCase,
     GetHolidayByDateUseCase,
 )
-from app.holidays.domain.exceptions import HolidayNotFoundError
 from app.holidays.presentation.schemas import (
     HolidayCreate,
     HolidayUpdate,
@@ -47,7 +46,6 @@ async def create_holiday(
     current_user: CurrentPrincipal = Depends(get_current_user),
     use_case: CreateHolidayUseCase = Depends(get_create_holiday_use_case),
 ) -> HolidayRead:
-    # business_id from path; current_user is available if you later want to check ownership
     cmd = CreateHolidayCommand(
         business_id=business_id,
         owner_id=current_user.clerk_user_id,
@@ -95,12 +93,7 @@ async def get_holiday_by_date(
         date=holiday_date,
     )
     holiday = await use_case.execute(cmd)
-    if holiday is None:
-        # You can map HolidayNotFoundError globally instead if you prefer
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Holiday not found",
-        )
+
     return HolidayRead.model_validate(holiday)
 
 
@@ -122,10 +115,13 @@ async def update_holiday(
     if "name" not in payload.model_fields_set:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No fields to update",
+            detail={
+                "code": "no_fields_to_update",
+                "message": "No fields to update.",
+            },
         )
 
-    new_name = payload.name  # str | None, may already be normalized in schema
+    new_name = payload.name
 
     cmd = RenameHolidayCommand(
         business_id=business_id,
@@ -133,13 +129,8 @@ async def update_holiday(
         date=holiday_date,
         new_name=new_name,
     )
-    try:
-        holiday = await use_case.execute(cmd)
-    except HolidayNotFoundError:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Holiday not found",
-        )
+
+    holiday = await use_case.execute(cmd)
 
     return HolidayRead.model_validate(holiday)
 
@@ -160,5 +151,4 @@ async def delete_holiday(
         date=holiday_date,
     )
     await use_case.execute(cmd)
-    # You can decide whether to raise 404 when nothing was deleted later
     return None
