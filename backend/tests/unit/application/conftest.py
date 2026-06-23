@@ -1,4 +1,3 @@
-# tests/unit/application/conftest.py
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
@@ -9,7 +8,7 @@ import pytest
 from app.attendance.application.ports import AttendanceRepositoryPort
 from app.attendance.domain.entities import Attendance, AttendanceStatus
 from app.business.application.ports import BusinessRepositoryPort
-from app.business.domain.entities import Business, WageType
+from app.business.domain.entities import Business, WageType, WeeklyOffRule
 from app.business.domain.value_objects import (
     SalaryBasis,
     normalize_business_name_for_lookup,
@@ -19,6 +18,9 @@ from app.employees.application.ports import EmployeeRepositoryPort
 from app.employees.domain.entities import Employee
 from app.holidays.application.ports import HolidayRepositoryPort
 from app.holidays.domain.entities import Holiday
+from app.payroll.application.ports import PayrollRepositoryPort
+from app.payroll.domain.entities import PayrollRun
+from app.payroll.domain.value_objects import PayrollPeriod
 
 
 class InMemoryBusinessRepository(BusinessRepositoryPort):
@@ -68,6 +70,13 @@ class InMemoryBusinessRepository(BusinessRepositoryPort):
             if b.id == business.id:
                 self._items[idx] = business
                 return
+
+    # ── Payroll-required method ────────────────────────────────────────────────
+    async def get_weekly_off_rules(self, business_id: UUID) -> list[WeeklyOffRule]:
+        business = next((b for b in self._items if b.id == business_id), None)
+        if business is None:
+            return []
+        return list(business.weekly_off_rules)
 
 
 class InMemoryHolidayRepository(HolidayRepositoryPort):
@@ -126,6 +135,19 @@ class InMemoryHolidayRepository(HolidayRepositoryPort):
                 self._items[idx] = holiday
                 return
 
+    # ── Payroll-required method ────────────────────────────────────────────────
+    async def list_for_period(
+        self,
+        business_id: UUID,
+        start_date: date,
+        end_date: date,
+    ) -> list[Holiday]:
+        return [
+            h
+            for h in self._items
+            if h.business_id == business_id and start_date <= h.date <= end_date
+        ]
+
 
 class InMemoryEmployeeRepository(EmployeeRepositoryPort):
     def __init__(self, items: list[Employee] | None = None) -> None:
@@ -165,6 +187,19 @@ class InMemoryEmployeeRepository(EmployeeRepositoryPort):
             e
             for e in self._items
             if not (e.business_id == employee.business_id and e.id == employee.id)
+        ]
+
+    # ── Payroll-required methods ───────────────────────────────────────────────
+    async def list_active_for_business(self, business_id: UUID) -> Sequence[Employee]:
+        return await self.list_by_business(business_id, is_active=True)
+
+    async def list_by_ids(
+        self, business_id: UUID, employee_ids: list[UUID]
+    ) -> Sequence[Employee]:
+        return [
+            e
+            for e in self._items
+            if e.business_id == business_id and e.id in employee_ids
         ]
 
 
@@ -269,6 +304,60 @@ class InMemoryAttendanceRepository(AttendanceRepositoryPort):
                 results.append(attendance)
         return results
 
+    # ── Payroll-required method ────────────────────────────────────────────────
+    async def list_for_employee_and_period(
+        self,
+        business_id: UUID,
+        employee_id: UUID,
+        start_date: date,
+        end_date: date,
+    ) -> list[Attendance]:
+        return [
+            a
+            for a in self._items
+            if a.business_id == business_id
+            and a.employee_id == employee_id
+            and start_date <= a.date <= end_date
+        ]
+
+
+class InMemoryPayrollRepository(PayrollRepositoryPort):
+    def __init__(self, items: list[PayrollRun] | None = None) -> None:
+        self._items: list[PayrollRun] = list(items or [])
+
+    async def add(self, run: PayrollRun) -> None:
+        self._items.append(run)
+
+    async def get(self, business_id: UUID, run_id: UUID) -> PayrollRun | None:
+        return next(
+            (r for r in self._items if r.id == run_id and r.business_id == business_id),
+            None,
+        )
+
+    async def list(
+        self,
+        business_id: UUID,
+        period: PayrollPeriod | None = None,
+        employee_id: UUID | None = None,
+    ) -> list[PayrollRun]:
+        result = [r for r in self._items if r.business_id == business_id]
+        if period is not None:
+            result = [r for r in result if r.period == period]
+        if employee_id is not None:
+            result = [
+                r
+                for r in result
+                if any(li.employee_id == employee_id for li in r.line_items)
+            ]
+        return result
+
+    async def delete_for_period(self, business_id: UUID, period: PayrollPeriod) -> None:
+        self._items = [
+            r
+            for r in self._items
+            if not (r.business_id == business_id and r.period == period)
+        ]
+
 
 class InMemoryUnitOfWork(UnitOfWorkPort):
     def __init__(
@@ -277,11 +366,13 @@ class InMemoryUnitOfWork(UnitOfWorkPort):
         holiday_repo: InMemoryHolidayRepository,
         employee_repo: InMemoryEmployeeRepository,
         attendance_repo: InMemoryAttendanceRepository | None = None,
+        payroll_repo: InMemoryPayrollRepository | None = None,
     ) -> None:
         self.businesses = business_repo
         self.holidays = holiday_repo
         self.employees = employee_repo
         self.attendance = attendance_repo or InMemoryAttendanceRepository()
+        self.payroll = payroll_repo or InMemoryPayrollRepository()
         self.committed = False
 
     async def __aenter__(self) -> "InMemoryUnitOfWork":
@@ -295,6 +386,9 @@ class InMemoryUnitOfWork(UnitOfWorkPort):
 
     async def rollback(self) -> None:
         self.committed = False
+
+
+# ── Fixtures ───────────────────────────────────────────────────────────────────
 
 
 @pytest.fixture
@@ -341,15 +435,22 @@ def in_memory_attendance_repo() -> InMemoryAttendanceRepository:
 
 
 @pytest.fixture
+def in_memory_payroll_repo() -> InMemoryPayrollRepository:
+    return InMemoryPayrollRepository()
+
+
+@pytest.fixture
 def in_memory_uow(
     in_memory_business_repo: InMemoryBusinessRepository,
     in_memory_holiday_repo: InMemoryHolidayRepository,
     in_memory_employee_repo: InMemoryEmployeeRepository,
     in_memory_attendance_repo: InMemoryAttendanceRepository,
+    in_memory_payroll_repo: InMemoryPayrollRepository,
 ) -> InMemoryUnitOfWork:
     return InMemoryUnitOfWork(
         business_repo=in_memory_business_repo,
         holiday_repo=in_memory_holiday_repo,
         employee_repo=in_memory_employee_repo,
         attendance_repo=in_memory_attendance_repo,
+        payroll_repo=in_memory_payroll_repo,
     )
