@@ -5,6 +5,7 @@ from app.business.presentation.router import router as business_router
 from app.core.exception_handler import register_exception_handlers
 from app.employees.presentation.router import router as employees_router
 from app.holidays.presentation.router import router as holidays_router
+from app.payroll.presentation.router import router as payroll_router
 
 app = FastAPI(title="Easy Payroll API")
 
@@ -21,6 +22,11 @@ app.include_router(
     attendance_router,
     prefix="/businesses/{business_id}/attendance",
     tags=["Attendance"],
+)
+app.include_router(
+    payroll_router,
+    prefix="/businesses/{business_id}/payroll",
+    tags=["Payroll"],
 )
 
 

@@ -16,6 +16,10 @@ from app.employees.infrastructure.orm import EmployeeModel  # noqa: F401
 from app.holidays.infrastructure.orm import (
     HolidayModel,  # noqa: F401 - ensure models are imported for Alembic's autogenerate
 )
+from app.payroll.infrastructure.orm import (  # noqa: F401
+    PayrollLineItemModel,
+    PayrollRunModel,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
