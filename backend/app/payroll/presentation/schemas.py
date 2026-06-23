@@ -3,8 +3,9 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.business.domain.value_objects import SalaryBasis, WageType
 from app.payroll.domain.entities import PayrollRunStatus
@@ -15,7 +16,7 @@ from app.payroll.domain.entities import PayrollRunStatus
 
 class RunPayrollRequest(BaseModel):
     year: int
-    month: int
+    month: Annotated[int, Field(ge=1, le=12)]
     employee_ids: list[UUID] | None = None
 
 

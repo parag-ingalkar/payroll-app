@@ -36,7 +36,7 @@ router = APIRouter()
 @router.post(
     "/run",
     response_model=PayrollRunRead,
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_201_CREATED,
     summary="Run (or re-run) payroll for a period",
 )
 async def run_payroll(

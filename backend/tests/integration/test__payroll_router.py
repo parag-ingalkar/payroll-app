@@ -5,8 +5,6 @@ from uuid import uuid4
 import pytest
 
 from tests.integration.conftest import (
-    _api_create_business,
-    _api_create_employee,
     _api_seed_attendance,
 )
 
@@ -34,7 +32,7 @@ async def test__run_payroll_post_returns_201(api_client, seeded_business_with_em
     """P0: POST /run with attendance returns 201 and run payload."""
     business_id = seeded_business_with_employee["business_id"]
     employee_id = seeded_business_with_employee["employee_id"]
-    await _api_seed_attendance(api_client, business_id, employee_id, 2026, 1, 26)
+    await _api_seed_attendance(api_client, business_id, employee_id, 2026, 1, 31)
 
     resp = await api_client.post(
         f"/businesses/{business_id}/payroll/run",

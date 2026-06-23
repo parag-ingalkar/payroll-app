@@ -81,7 +81,7 @@ async def _run_payroll(
     month: int,
 ):
     engine = PayrollCalculationEngine()
-    use_case = RunPayrollUseCase(lambda: uow, engine)
+    use_case = RunPayrollUseCase(uow, engine)
     return await use_case.execute(
         RunPayrollCommand(
             business_id=business.id,
