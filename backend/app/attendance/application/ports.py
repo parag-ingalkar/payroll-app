@@ -37,3 +37,11 @@ class AttendanceRepositoryPort(Protocol):
     async def upsert_many(
         self, attendances: list[Attendance]
     ) -> Sequence[Attendance]: ...
+
+    async def list_for_employee_and_period(
+        self,
+        business_id: UUID,
+        employee_id: UUID,
+        start_date: date,
+        end_date: date,
+    ) -> Sequence[Attendance]: ...

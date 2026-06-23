@@ -68,3 +68,17 @@ class SqlAlchemyEmployeeRepository(EmployeeRepositoryPort):
         model = result.scalar_one_or_none()
         if model:
             await self.session.delete(model)
+
+    async def list_active_for_business(self, business_id: UUID) -> Sequence[Employee]:
+        return await self.list_by_business(business_id, is_active=True)
+
+    async def list_by_ids(
+        self, business_id: UUID, employee_ids: list[UUID]
+    ) -> Sequence[Employee]:
+        result = await self.session.execute(
+            select(EmployeeModel).where(
+                EmployeeModel.business_id == business_id,
+                EmployeeModel.id.in_(employee_ids),
+            )
+        )
+        return [m.to_entity() for m in result.scalars().all()]

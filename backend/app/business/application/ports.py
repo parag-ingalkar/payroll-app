@@ -1,8 +1,8 @@
 from collections.abc import Sequence
-from uuid import UUID
 from typing import Protocol
+from uuid import UUID
 
-from app.business.domain.entities import Business
+from app.business.domain.entities import Business, WeeklyOffRule
 
 
 class BusinessRepositoryPort(Protocol):
@@ -25,3 +25,7 @@ class BusinessRepositoryPort(Protocol):
     async def delete(self, business: Business) -> None: ...
 
     async def update(self, business: Business) -> None: ...
+
+    async def get_weekly_off_rules(
+        self, business_id: UUID
+    ) -> Sequence[WeeklyOffRule]: ...

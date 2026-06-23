@@ -1,13 +1,13 @@
-from datetime import date
 from collections.abc import Sequence
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy import extract, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.holidays.application.ports import HolidayRepositoryPort
 from app.holidays.domain.entities import Holiday
 from app.holidays.infrastructure.orm import HolidayModel
-from app.holidays.application.ports import HolidayRepositoryPort
 
 
 class SqlAlchemyHolidayRepository(HolidayRepositoryPort):
@@ -78,3 +78,17 @@ class SqlAlchemyHolidayRepository(HolidayRepositoryPort):
         holiday_model.name = holiday.name
 
         await self.session.flush()
+
+    async def list_for_period(
+        self,
+        business_id: UUID,
+        start_date: date,
+        end_date: date,
+    ) -> Sequence[Holiday]:
+        stmt = select(HolidayModel).where(
+            HolidayModel.business_id == business_id,
+            HolidayModel.date >= start_date,
+            HolidayModel.date <= end_date,
+        )
+        result = await self.session.execute(stmt)
+        return [m.to_entity() for m in result.scalars().all()]

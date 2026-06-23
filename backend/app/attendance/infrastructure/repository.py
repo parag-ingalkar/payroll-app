@@ -145,3 +145,17 @@ class SqlAlchemyAttendanceRepository(AttendanceRepositoryPort):
             )
             for row in rows
         ]
+
+    async def list_for_employee_and_period(
+        self,
+        business_id: UUID,
+        employee_id: UUID,
+        start_date: date,
+        end_date: date,
+    ) -> Sequence[Attendance]:
+        return await self.list_by_employee(
+            business_id=business_id,
+            employee_id=employee_id,
+            start_date=start_date,
+            end_date=end_date,
+        )

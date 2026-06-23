@@ -10,6 +10,8 @@ from app.employees.application.ports import EmployeeRepositoryPort
 from app.employees.infrastructure.repositories import SqlAlchemyEmployeeRepository
 from app.holidays.application.ports import HolidayRepositoryPort
 from app.holidays.infrastructure.repositories import SqlAlchemyHolidayRepository
+from app.payroll.application.ports import PayrollRepositoryPort
+from app.payroll.infrastructure.repository import SqlAlchemyPayrollRepository
 
 
 class UnitOfWorkPort(Protocol):
@@ -17,13 +19,11 @@ class UnitOfWorkPort(Protocol):
     holidays: HolidayRepositoryPort
     employees: EmployeeRepositoryPort
     attendance: AttendanceRepositoryPort
+    payroll: PayrollRepositoryPort
 
     async def __aenter__(self) -> "UnitOfWorkPort": ...
-
     async def __aexit__(self, exc_type, exc, tb) -> None: ...
-
     async def commit(self) -> None: ...
-
     async def rollback(self) -> None: ...
 
 
@@ -35,6 +35,7 @@ class SqlAlchemyUnitOfWork(UnitOfWorkPort):
         self.holidays: HolidayRepositoryPort
         self.employees: EmployeeRepositoryPort
         self.attendance: AttendanceRepositoryPort
+        self.payroll: PayrollRepositoryPort
 
     async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
         self.session = self._session_factory()
@@ -42,6 +43,7 @@ class SqlAlchemyUnitOfWork(UnitOfWorkPort):
         self.holidays = SqlAlchemyHolidayRepository(self.session)
         self.employees = SqlAlchemyEmployeeRepository(self.session)
         self.attendance = SqlAlchemyAttendanceRepository(self.session)
+        self.payroll = SqlAlchemyPayrollRepository(self.session)
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:

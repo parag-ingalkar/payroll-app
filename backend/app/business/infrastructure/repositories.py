@@ -2,18 +2,18 @@ from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.business.application.ports import BusinessRepositoryPort
-from app.business.domain.entities import Business
-from app.business.infrastructure.orm import BusinessModel, BusinessWeeklyOffRuleModel
+from app.business.domain.entities import Business, WeeklyOffRule
+from app.business.domain.value_objects import normalize_business_name_for_lookup
 from app.business.infrastructure.mappers import (
-    business_model_to_domain,
     business_domain_to_model,
+    business_model_to_domain,
     sync_business_identity_from_model,
 )
-from app.business.domain.value_objects import normalize_business_name_for_lookup
+from app.business.infrastructure.orm import BusinessModel, BusinessWeeklyOffRuleModel
 
 
 class SqlAlchemyBusinessRepository(BusinessRepositoryPort):
@@ -131,3 +131,15 @@ class SqlAlchemyBusinessRepository(BusinessRepositoryPort):
                     week_of_month=rule.week_of_month,
                 )
             )
+
+    async def get_weekly_off_rules(self, business_id: UUID) -> list[WeeklyOffRule]:
+        stmt = (
+            select(BusinessModel)
+            .options(selectinload(BusinessModel.weekly_off_rules))
+            .where(BusinessModel.id == business_id)
+        )
+        result = await self._session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if model is None:
+            return []
+        return business_model_to_domain(model).weekly_off_rules

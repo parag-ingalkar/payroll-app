@@ -1,7 +1,7 @@
-from datetime import date
-from uuid import UUID
-from typing import Protocol
 from collections.abc import Sequence
+from datetime import date
+from typing import Protocol
+from uuid import UUID
 
 from app.holidays.domain.entities import Holiday
 
@@ -26,3 +26,10 @@ class HolidayRepositoryPort(Protocol):
     ) -> None: ...
 
     async def update(self, holiday: Holiday) -> None: ...
+
+    async def list_for_period(
+        self,
+        business_id: UUID,
+        start_date: date,
+        end_date: date,
+    ) -> Sequence[Holiday]: ...
