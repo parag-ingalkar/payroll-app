@@ -42,7 +42,7 @@ class BusinessModel(Base):
     normalized_name: Mapped[str] = mapped_column(String(100), nullable=False)
 
     default_wage_type: Mapped[WageType] = mapped_column(
-        Enum(WageType, name="wage_type", native_enum=False),
+        Enum(WageType, name="wage_type", native_enum=False, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
     default_working_hours_per_day: Mapped[Decimal] = mapped_column(
@@ -54,7 +54,7 @@ class BusinessModel(Base):
         nullable=False,
     )
     default_salary_basis: Mapped[SalaryBasis] = mapped_column(
-        Enum(SalaryBasis, name="salary_basis", native_enum=False),
+        Enum(SalaryBasis, name="salary_basis", native_enum=False, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         server_default="working_26_days",  # or "calendar_days"
     )
@@ -116,7 +116,7 @@ class BusinessWeeklyOffRuleModel(Base):
         index=True,
     )
     weekday: Mapped[Weekday] = mapped_column(
-        Enum(Weekday, name="weekday", native_enum=False),
+        Enum(Weekday, name="weekday", native_enum=False, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
     week_of_month: Mapped[int | None] = mapped_column(

@@ -30,11 +30,11 @@ class EmployeeModel(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     designation: Mapped[str | None] = mapped_column(String(255), nullable=True)
     wage_type: Mapped[WageType] = mapped_column(
-        Enum(WageType, name="wage_type", native_enum=False),
+        Enum(WageType, name="wage_type", native_enum=False,values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
     salary_basis: Mapped[SalaryBasis] = mapped_column(
-        Enum(SalaryBasis, name="salary_basis", native_enum=False),
+        Enum(SalaryBasis, name="salary_basis", native_enum=False, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
     wage_rate: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
