@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
@@ -16,11 +17,11 @@ from .value_objects import DayPayInfo, PayDayMap, PayDayType, PayrollPeriod
 class EmployeePayrollContext:
     employee: Employee
     business: Business
-    attendance_records: list[Attendance]
-    holidays: list[Holiday]
+    attendance_records: Sequence[Attendance]
+    holidays: Sequence[Holiday]
 
 
-def _is_weekly_off(d: date, rules: list[WeeklyOffRule]) -> bool:
+def _is_weekly_off(d: date, rules: Sequence[WeeklyOffRule]) -> bool:
     """Return True if *d* is a weekly-off day according to the given rules."""
     day_name = d.strftime("%A").upper()  # e.g. "MONDAY"
     for rule in rules:
@@ -34,7 +35,7 @@ class DayClassifier:
     def classify_period(
         period: PayrollPeriod,
         context: EmployeePayrollContext,
-        weekly_off_rules: list[WeeklyOffRule],
+        weekly_off_rules: Sequence[WeeklyOffRule],
     ) -> PayDayMap:
         att_by_date: dict[date, Attendance] = {
             a.date: a for a in context.attendance_records

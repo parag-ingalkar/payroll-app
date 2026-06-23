@@ -29,7 +29,7 @@ async def test__run_payroll_happy_path_creates_run(
     in_memory_uow,
 ):
     engine = PayrollCalculationEngine()
-    use_case = RunPayrollUseCase(lambda: in_memory_uow, engine)
+    use_case = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
 
     business = in_memory_uow.businesses._items[0]
     employee = in_memory_uow.employees._items[0]
@@ -68,7 +68,7 @@ async def test__run_payroll_wrong_owner_raises_business_not_found(
     in_memory_uow,
 ):
     engine = PayrollCalculationEngine()
-    use_case = RunPayrollUseCase(lambda: in_memory_uow, engine)
+    use_case = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
 
     business = in_memory_uow.businesses._items[0]
 
@@ -91,7 +91,7 @@ async def test__run_payroll_unknown_business_raises_business_not_found(
     in_memory_uow,
 ):
     engine = PayrollCalculationEngine()
-    use_case = RunPayrollUseCase(lambda: in_memory_uow, engine)
+    use_case = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
 
     cmd = RunPayrollCommand(
         business_id=uuid4(),
@@ -111,7 +111,7 @@ async def test__run_payroll_marks_incomplete_when_attendance_missing(
 ):
     """A working day with no attendance record → is_incomplete=True."""
     engine = PayrollCalculationEngine()
-    use_case = RunPayrollUseCase(lambda: in_memory_uow, engine)
+    use_case = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
 
     business = in_memory_uow.businesses._items[0]
     # Deliberately add NO attendance records
@@ -134,7 +134,7 @@ async def test__run_payroll_replaces_existing_run_for_same_period(
 ):
     """Running payroll twice for the same period replaces the first run."""
     engine = PayrollCalculationEngine()
-    use_case = RunPayrollUseCase(lambda: in_memory_uow, engine)
+    use_case = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
 
     business = in_memory_uow.businesses._items[0]
     employee = in_memory_uow.employees._items[0]
@@ -174,7 +174,7 @@ async def test__run_payroll_with_specific_employee_ids(
     in_memory_uow,
 ):
     engine = PayrollCalculationEngine()
-    use_case = RunPayrollUseCase(lambda: in_memory_uow, engine)
+    use_case = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
 
     business = in_memory_uow.businesses._items[0]
     employee = in_memory_uow.employees._items[0]
@@ -212,8 +212,8 @@ async def test__get_payroll_run_happy_path(
     in_memory_uow,
 ):
     engine = PayrollCalculationEngine()
-    run_uc = RunPayrollUseCase(lambda: in_memory_uow, engine)
-    get_uc = GetPayrollRunUseCase(lambda: in_memory_uow)
+    run_uc = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
+    get_uc = GetPayrollRunUseCase(uow=in_memory_uow)
 
     business = in_memory_uow.businesses._items[0]
     employee = in_memory_uow.employees._items[0]
@@ -255,7 +255,7 @@ async def test__get_payroll_run_not_found_raises_error(
     business_defaults,
     in_memory_uow,
 ):
-    get_uc = GetPayrollRunUseCase(lambda: in_memory_uow)
+    get_uc = GetPayrollRunUseCase(uow=in_memory_uow)
     business = in_memory_uow.businesses._items[0]
 
     with pytest.raises(PayrollRunNotFoundError):
@@ -272,7 +272,7 @@ async def test__get_payroll_run_not_found_raises_error(
 async def test__get_payroll_run_wrong_owner_raises_business_not_found(
     in_memory_uow,
 ):
-    get_uc = GetPayrollRunUseCase(lambda: in_memory_uow)
+    get_uc = GetPayrollRunUseCase(uow=in_memory_uow)
     business = in_memory_uow.businesses._items[0]
 
     with pytest.raises(BusinessNotFoundError):
@@ -294,8 +294,8 @@ async def test__list_payroll_runs_returns_all_for_business(
     in_memory_uow,
 ):
     engine = PayrollCalculationEngine()
-    run_uc = RunPayrollUseCase(lambda: in_memory_uow, engine)
-    list_uc = ListPayrollRunsUseCase(lambda: in_memory_uow)
+    run_uc = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
+    list_uc = ListPayrollRunsUseCase(uow=in_memory_uow)
 
     business = in_memory_uow.businesses._items[0]
     employee = in_memory_uow.employees._items[0]
@@ -335,7 +335,7 @@ async def test__list_payroll_runs_returns_all_for_business(
 async def test__list_payroll_runs_wrong_owner_raises_business_not_found(
     in_memory_uow,
 ):
-    list_uc = ListPayrollRunsUseCase(lambda: in_memory_uow)
+    list_uc = ListPayrollRunsUseCase(uow=in_memory_uow)
     business = in_memory_uow.businesses._items[0]
 
     with pytest.raises(BusinessNotFoundError):
@@ -353,8 +353,8 @@ async def test__list_payroll_runs_filtered_by_year_month(
     in_memory_uow,
 ):
     engine = PayrollCalculationEngine()
-    run_uc = RunPayrollUseCase(lambda: in_memory_uow, engine)
-    list_uc = ListPayrollRunsUseCase(lambda: in_memory_uow)
+    run_uc = RunPayrollUseCase(uow=in_memory_uow, engine=engine)
+    list_uc = ListPayrollRunsUseCase(uow=in_memory_uow)
 
     business = in_memory_uow.businesses._items[0]
     employee = in_memory_uow.employees._items[0]

@@ -29,9 +29,8 @@ from app.holidays.domain.exceptions import (
 async def test__create_holiday_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     cmd = CreateHolidayCommand(
@@ -53,9 +52,8 @@ async def test__create_holiday_use_case(
 async def test__list_holidays_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = ListHolidaysUseCase(uow=in_memory_uow)
@@ -77,9 +75,8 @@ async def test__list_holidays_use_case(
 async def test__rename_holiday_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = RenameHolidayUseCase(uow=in_memory_uow)
@@ -101,9 +98,8 @@ async def test__rename_holiday_use_case(
 async def test__rename_holiday_use_case_with_non_existent_holiday(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = RenameHolidayUseCase(uow=in_memory_uow)
@@ -122,9 +118,8 @@ async def test__rename_holiday_use_case_with_non_existent_holiday(
 async def test__create_holiday_use_case_with_existing_holiday(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = CreateHolidayUseCase(uow=in_memory_uow)
@@ -143,10 +138,8 @@ async def test__create_holiday_use_case_with_existing_holiday(
 async def test__list_multiple_holidays_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_holiday_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     # Add another holiday for the same business
@@ -155,7 +148,7 @@ async def test__list_multiple_holidays_use_case(
         date_=date(2026, 1, 26),
         name="Republic Day",
     )
-    await in_memory_holiday_repo.add(another_holiday)
+    await in_memory_uow.holidays.add(another_holiday)
 
     use_case = ListHolidaysUseCase(uow=in_memory_uow)
     cmd = ListHolidaysCommand(
@@ -178,10 +171,8 @@ async def test__list_multiple_holidays_use_case(
 async def test__list_holidays_by_month_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_holiday_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     another_holiday = Holiday.create(
@@ -189,7 +180,7 @@ async def test__list_holidays_by_month_use_case(
         date_=date(2026, 2, 1),
         name="Some February Holiday",
     )
-    await in_memory_holiday_repo.add(another_holiday)
+    await in_memory_uow.holidays.add(another_holiday)
 
     use_case = ListHolidaysUseCase(uow=in_memory_uow)
     cmd = ListHolidaysCommand(
@@ -210,10 +201,8 @@ async def test__list_holidays_by_month_use_case(
 async def test__list_holidays_by_year_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_holiday_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     another_holiday = Holiday.create(
@@ -221,7 +210,7 @@ async def test__list_holidays_by_year_use_case(
         date_=date(2027, 1, 1),
         name="Some January Holiday",
     )
-    await in_memory_holiday_repo.add(another_holiday)
+    await in_memory_uow.holidays.add(another_holiday)
 
     use_case = ListHolidaysUseCase(uow=in_memory_uow)
     cmd = ListHolidaysCommand(
@@ -241,10 +230,8 @@ async def test__list_holidays_by_year_use_case(
 async def test__list_all_holidays_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_holiday_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     other_holiday = Holiday.create(
@@ -252,14 +239,14 @@ async def test__list_all_holidays_use_case(
         date_=date(2027, 1, 1),
         name="Some January Holiday",
     )
-    await in_memory_holiday_repo.add(other_holiday)
+    await in_memory_uow.holidays.add(other_holiday)
 
     another_holiday = Holiday.create(
         business_id=business.id,
         date_=date(2027, 2, 1),
         name="Some February Holiday",
     )
-    await in_memory_holiday_repo.add(another_holiday)
+    await in_memory_uow.holidays.add(another_holiday)
 
     use_case = ListHolidaysUseCase(uow=in_memory_uow)
     cmd = ListHolidaysCommand(
@@ -282,10 +269,8 @@ async def test__list_all_holidays_use_case(
 async def test__delete_holiday_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_holiday_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = DeleteHolidayUseCase(uow=in_memory_uow)
@@ -298,7 +283,7 @@ async def test__delete_holiday_use_case(
     await use_case.execute(cmd)
 
     assert in_memory_uow.committed is True
-    holidays = await in_memory_holiday_repo.list_by_business(business_id=business.id)
+    holidays = await in_memory_uow.holidays.list_by_business(business_id=business.id)
     assert len(holidays) == 0
 
 
@@ -308,10 +293,9 @@ async def test__delete_holiday_use_case(
 @pytest.mark.asyncio
 async def test__create_holiday_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
     """Creating a holiday with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = CreateHolidayUseCase(uow=in_memory_uow)
     cmd = CreateHolidayCommand(
@@ -331,10 +315,9 @@ async def test__create_holiday_wrong_owner_raises_error(
 @pytest.mark.asyncio
 async def test__list_holidays_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
     """Listing holidays with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = ListHolidaysUseCase(uow=in_memory_uow)
     cmd = ListHolidaysCommand(
@@ -351,10 +334,9 @@ async def test__list_holidays_wrong_owner_raises_error(
 @pytest.mark.asyncio
 async def test__get_holiday_by_date_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
     """Getting a holiday by date with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = GetHolidayByDateUseCase(uow=in_memory_uow)
     cmd = GetHolidayByDateCommand(
@@ -372,10 +354,9 @@ async def test__get_holiday_by_date_wrong_owner_raises_error(
 @pytest.mark.asyncio
 async def test__rename_holiday_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
     """Renaming a holiday with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = RenameHolidayUseCase(uow=in_memory_uow)
     cmd = RenameHolidayCommand(
@@ -395,10 +376,9 @@ async def test__rename_holiday_wrong_owner_raises_error(
 @pytest.mark.asyncio
 async def test__delete_holiday_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
     """Deleting a holiday with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = DeleteHolidayUseCase(uow=in_memory_uow)
     cmd = DeleteHolidayCommand(

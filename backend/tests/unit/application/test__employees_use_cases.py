@@ -52,9 +52,8 @@ def _create_cmd(business_id, owner_id, **overrides) -> CreateEmployeeCommand:
 async def test__create_employee_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = CreateEmployeeUseCase(uow=in_memory_uow)
@@ -73,11 +72,10 @@ async def test__create_employee_use_case(
 async def test__create_employee_uses_business_defaults(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
     """When wage_type, salary_basis, working_hours_per_day, overtime_multiplier are None,
     the business defaults should be applied."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = CreateEmployeeUseCase(uow=in_memory_uow)
@@ -107,10 +105,9 @@ async def test__create_employee_uses_business_defaults(
 async def test__create_employee_overrides_business_defaults(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
     """Explicitly provided fields should NOT be replaced by business defaults."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = CreateEmployeeUseCase(uow=in_memory_uow)
@@ -132,9 +129,8 @@ async def test__create_employee_overrides_business_defaults(
 @pytest.mark.asyncio
 async def test__create_employee_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = CreateEmployeeUseCase(uow=in_memory_uow)
     cmd = _create_cmd(business.id, "wrong-owner")
@@ -147,9 +143,8 @@ async def test__create_employee_wrong_owner_raises_error(
 async def test__list_employees_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = ListEmployeesUseCase(uow=in_memory_uow)
@@ -168,10 +163,8 @@ async def test__list_employees_use_case(
 async def test__list_employees_filter_by_active(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     inactive_employee = Employee.create(
@@ -186,7 +179,7 @@ async def test__list_employees_filter_by_active(
         overtime_multiplier=Decimal("1.5"),
     )
     inactive_employee.deactivate()
-    await in_memory_employee_repo.add(inactive_employee)
+    await in_memory_uow.employees.add(inactive_employee)
 
     use_case = ListEmployeesUseCase(uow=in_memory_uow)
 
@@ -209,12 +202,10 @@ async def test__list_employees_filter_by_active(
 async def test__get_employee_by_id_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = GetEmployeeByIdUseCase(uow=in_memory_uow)
     cmd = GetEmployeeByIdCommand(
@@ -233,9 +224,8 @@ async def test__get_employee_by_id_use_case(
 async def test__get_employee_by_id_not_found(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = GetEmployeeByIdUseCase(uow=in_memory_uow)
@@ -253,12 +243,10 @@ async def test__get_employee_by_id_not_found(
 async def test__update_employee_name(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = UpdateEmployeeUseCase(uow=in_memory_uow)
     cmd = UpdateEmployeeCommand(
@@ -279,13 +267,11 @@ async def test__update_employee_name(
 async def test__update_employee_clears_designation(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     """Explicitly sending designation=null should clear it."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     assert employee.designation is not None  # seeded with "Engineer"
 
@@ -310,12 +296,10 @@ async def test__update_employee_clears_designation(
 async def test__update_employee_wage_fields(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = UpdateEmployeeUseCase(uow=in_memory_uow)
     cmd = UpdateEmployeeCommand(
@@ -343,9 +327,8 @@ async def test__update_employee_wage_fields(
 async def test__update_employee_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = UpdateEmployeeUseCase(uow=in_memory_uow)
@@ -365,12 +348,10 @@ async def test__update_employee_not_found_raises_error(
 async def test__delete_employee_use_case(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = DeleteEmployeeUseCase(uow=in_memory_uow)
     cmd = DeleteEmployeeCommand(
@@ -382,7 +363,7 @@ async def test__delete_employee_use_case(
     await use_case.execute(cmd)
 
     assert in_memory_uow.committed is True
-    remaining = await in_memory_employee_repo.list_by_business(business_id=business.id)
+    remaining = await in_memory_uow.employees.list_by_business(business_id=business.id)
     assert len(remaining) == 0
 
 
@@ -390,9 +371,8 @@ async def test__delete_employee_use_case(
 async def test__delete_employee_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = DeleteEmployeeUseCase(uow=in_memory_uow)
@@ -412,10 +392,9 @@ async def test__delete_employee_not_found_raises_error(
 @pytest.mark.asyncio
 async def test__list_employees_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
     """Listing employees with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = ListEmployeesUseCase(uow=in_memory_uow)
     cmd = ListEmployeesCommand(
@@ -432,12 +411,10 @@ async def test__list_employees_wrong_owner_raises_error(
 @pytest.mark.asyncio
 async def test__get_employee_by_id_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     """Getting an employee by id with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = GetEmployeeByIdUseCase(uow=in_memory_uow)
     cmd = GetEmployeeByIdCommand(
@@ -455,12 +432,10 @@ async def test__get_employee_by_id_wrong_owner_raises_error(
 @pytest.mark.asyncio
 async def test__update_employee_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     """Updating an employee with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = UpdateEmployeeUseCase(uow=in_memory_uow)
     cmd = UpdateEmployeeCommand(
@@ -481,12 +456,10 @@ async def test__update_employee_wrong_owner_raises_error(
 @pytest.mark.asyncio
 async def test__delete_employee_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     """Deleting an employee with wrong owner_id should raise BusinessNotFoundError."""
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = DeleteEmployeeUseCase(uow=in_memory_uow)
     cmd = DeleteEmployeeCommand(
@@ -506,12 +479,10 @@ async def test__delete_employee_wrong_owner_raises_error(
 async def test__deactivate_employee_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     assert employee.is_active is True
 
@@ -532,13 +503,11 @@ async def test__deactivate_employee_happy_path(
 async def test__deactivate_employee_idempotent(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     """Deactivating an already inactive employee should be idempotent."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     employee.deactivate()
     assert employee.is_active is False
@@ -561,11 +530,9 @@ async def test__deactivate_employee_idempotent(
 async def test__deactivate_employee_wrong_owner_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = DeactivateEmployeeUseCase(uow=in_memory_uow)
     cmd = DeactivateEmployeeCommand(
@@ -582,12 +549,10 @@ async def test__deactivate_employee_wrong_owner_raises_error(
 async def test__deactivate_employee_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     from uuid import uuid4
 
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = DeactivateEmployeeUseCase(uow=in_memory_uow)
@@ -605,12 +570,10 @@ async def test__deactivate_employee_not_found_raises_error(
 async def test__activate_employee_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     employee.deactivate()
     assert employee.is_active is False
@@ -632,13 +595,11 @@ async def test__activate_employee_happy_path(
 async def test__activate_employee_idempotent(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     """Activating an already active employee should be idempotent."""
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     assert employee.is_active is True
 
@@ -660,11 +621,9 @@ async def test__activate_employee_idempotent(
 async def test__activate_employee_wrong_owner_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = ActivateEmployeeUseCase(uow=in_memory_uow)
     cmd = ActivateEmployeeCommand(
@@ -681,12 +640,10 @@ async def test__activate_employee_wrong_owner_raises_error(
 async def test__activate_employee_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     from uuid import uuid4
 
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = ActivateEmployeeUseCase(uow=in_memory_uow)

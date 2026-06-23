@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.business.domain.exceptions import BusinessNotFoundError
+from app.core.uow import UnitOfWorkPort
 from app.payroll.domain.day_classifier import DayClassifier, EmployeePayrollContext
 from app.payroll.domain.engine import PayrollCalculationEngine
 from app.payroll.domain.entities import PayrollRun, PayrollRunStatus
@@ -39,13 +41,13 @@ def _has_missing_attendance(
     return False
 
 
+@dataclass
 class RunPayrollUseCase:
-    def __init__(self, uow_factory, engine: PayrollCalculationEngine) -> None:
-        self._uow_factory = uow_factory
-        self._engine = engine
+    uow: UnitOfWorkPort
+    engine: PayrollCalculationEngine
 
     async def execute(self, cmd: RunPayrollCommand) -> PayrollRun:
-        async with self._uow_factory() as uow:
+        async with self.uow as uow:
             # Ownership check
             business = await uow.businesses.get_by_id_and_owner(
                 business_id=cmd.business_id,
@@ -107,7 +109,7 @@ class RunPayrollUseCase:
 
                 effective_basis = employee.salary_basis or business.default_salary_basis
 
-                line_item = self._engine.calculate_employee(
+                line_item = self.engine.calculate_employee(
                     period=period,
                     context=context,
                     day_pay_map=day_map,
@@ -136,12 +138,12 @@ class RunPayrollUseCase:
             return run
 
 
+@dataclass
 class GetPayrollRunUseCase:
-    def __init__(self, uow_factory) -> None:
-        self._uow_factory = uow_factory
+    uow: UnitOfWorkPort
 
     async def execute(self, cmd: GetPayrollRunCommand) -> PayrollRun:
-        async with self._uow_factory() as uow:
+        async with self.uow as uow:
             business = await uow.businesses.get_by_id_and_owner(
                 business_id=cmd.business_id,
                 owner_id=cmd.owner_id,
@@ -159,12 +161,12 @@ class GetPayrollRunUseCase:
             return run
 
 
+@dataclass
 class ListPayrollRunsUseCase:
-    def __init__(self, uow_factory) -> None:
-        self._uow_factory = uow_factory
+    uow: UnitOfWorkPort
 
     async def execute(self, cmd: ListPayrollRunsCommand) -> list[PayrollRun]:
-        async with self._uow_factory() as uow:
+        async with self.uow as uow:
             business = await uow.businesses.get_by_id_and_owner(
                 business_id=cmd.business_id,
                 owner_id=cmd.owner_id,

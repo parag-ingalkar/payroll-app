@@ -61,11 +61,9 @@ WEEKLY_OFF_DATE = date(2026, 6, 8)
 async def test__mark_attendance_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
@@ -90,11 +88,9 @@ async def test__mark_attendance_happy_path(
 async def test__mark_attendance_with_overtime(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
@@ -117,11 +113,9 @@ async def test__mark_attendance_with_overtime(
 async def test__mark_attendance_paid_leave(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
@@ -142,11 +136,9 @@ async def test__mark_attendance_paid_leave(
 @pytest.mark.asyncio
 async def test__mark_attendance_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
     cmd = MarkAttendanceCommand(
@@ -167,11 +159,9 @@ async def test__mark_attendance_wrong_owner_raises_error(
 async def test__mark_attendance_future_date_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
@@ -193,11 +183,9 @@ async def test__mark_attendance_future_date_raises_error(
 async def test__mark_attendance_on_holiday_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
@@ -217,9 +205,8 @@ async def test__mark_attendance_on_holiday_raises_error(
 async def test__mark_attendance_employee_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
@@ -239,12 +226,10 @@ async def test__mark_attendance_employee_not_found_raises_error(
 async def test__mark_attendance_inactive_employee_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
     employee.deactivate()
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
@@ -264,12 +249,9 @@ async def test__mark_attendance_inactive_employee_raises_error(
 async def test__mark_attendance_duplicate_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -279,7 +261,7 @@ async def test__mark_attendance_duplicate_raises_error(
         date=PAST_DATE,
         status=AttendanceStatus.PRESENT,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
     cmd = MarkAttendanceCommand(
@@ -301,12 +283,9 @@ async def test__mark_attendance_duplicate_raises_error(
 async def test__update_attendance_status(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -316,7 +295,7 @@ async def test__update_attendance_status(
         date=PAST_DATE,
         status=AttendanceStatus.PRESENT,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = UpdateAttendanceUseCase(uow=in_memory_uow)
     cmd = UpdateAttendanceCommand(
@@ -340,12 +319,9 @@ async def test__update_attendance_status(
 async def test__update_attendance_set_overtime(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -355,7 +331,7 @@ async def test__update_attendance_set_overtime(
         date=PAST_DATE,
         status=AttendanceStatus.PRESENT,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = UpdateAttendanceUseCase(uow=in_memory_uow)
     cmd = UpdateAttendanceCommand(
@@ -378,12 +354,9 @@ async def test__update_attendance_set_overtime(
 async def test__update_attendance_reset_overtime_to_zero(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -394,7 +367,7 @@ async def test__update_attendance_reset_overtime_to_zero(
         status=AttendanceStatus.PRESENT,
         overtime_hours=Decimal("2.0"),
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = UpdateAttendanceUseCase(uow=in_memory_uow)
     cmd = UpdateAttendanceCommand(
@@ -416,12 +389,9 @@ async def test__update_attendance_reset_overtime_to_zero(
 async def test__update_attendance_status_to_non_present_clears_overtime(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -432,7 +402,7 @@ async def test__update_attendance_status_to_non_present_clears_overtime(
         status=AttendanceStatus.PRESENT,
         overtime_hours=Decimal("2.0"),
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = UpdateAttendanceUseCase(uow=in_memory_uow)
     cmd = UpdateAttendanceCommand(
@@ -454,12 +424,9 @@ async def test__update_attendance_status_to_non_present_clears_overtime(
 async def test__update_attendance_overtime_on_non_present_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -469,7 +436,7 @@ async def test__update_attendance_overtime_on_non_present_raises_error(
         date=PAST_DATE,
         status=AttendanceStatus.HALF_DAY,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = UpdateAttendanceUseCase(uow=in_memory_uow)
     cmd = UpdateAttendanceCommand(
@@ -489,11 +456,9 @@ async def test__update_attendance_overtime_on_non_present_raises_error(
 async def test__update_attendance_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = UpdateAttendanceUseCase(uow=in_memory_uow)
@@ -513,12 +478,9 @@ async def test__update_attendance_not_found_raises_error(
 @pytest.mark.asyncio
 async def test__update_attendance_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     existing = Attendance.create(
         id=uuid4(),
@@ -527,7 +489,7 @@ async def test__update_attendance_wrong_owner_raises_error(
         date=PAST_DATE,
         status=AttendanceStatus.PRESENT,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = UpdateAttendanceUseCase(uow=in_memory_uow)
     cmd = UpdateAttendanceCommand(
@@ -552,12 +514,9 @@ async def test__update_attendance_wrong_owner_raises_error(
 async def test__delete_attendance_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -567,7 +526,7 @@ async def test__delete_attendance_happy_path(
         date=PAST_DATE,
         status=AttendanceStatus.PRESENT,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = DeleteAttendanceUseCase(uow=in_memory_uow)
     cmd = DeleteAttendanceCommand(
@@ -580,7 +539,7 @@ async def test__delete_attendance_happy_path(
     await use_case.execute(cmd)
 
     assert in_memory_uow.committed is True
-    remaining = await in_memory_attendance_repo.list_by_date(
+    remaining = await in_memory_uow.attendance.list_by_date(
         business_id=business.id, date_=PAST_DATE
     )
     assert len(remaining) == 0
@@ -590,11 +549,9 @@ async def test__delete_attendance_happy_path(
 async def test__delete_attendance_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = DeleteAttendanceUseCase(uow=in_memory_uow)
@@ -612,12 +569,9 @@ async def test__delete_attendance_not_found_raises_error(
 @pytest.mark.asyncio
 async def test__delete_attendance_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     existing = Attendance.create(
         id=uuid4(),
@@ -626,7 +580,7 @@ async def test__delete_attendance_wrong_owner_raises_error(
         date=PAST_DATE,
         status=AttendanceStatus.PRESENT,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = DeleteAttendanceUseCase(uow=in_memory_uow)
     cmd = DeleteAttendanceCommand(
@@ -649,12 +603,9 @@ async def test__delete_attendance_wrong_owner_raises_error(
 async def test__get_attendance_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -664,7 +615,7 @@ async def test__get_attendance_happy_path(
         date=PAST_DATE,
         status=AttendanceStatus.PAID_LEAVE,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = GetAttendanceUseCase(uow=in_memory_uow)
     cmd = GetAttendanceCommand(
@@ -684,11 +635,9 @@ async def test__get_attendance_happy_path(
 async def test__get_attendance_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = GetAttendanceUseCase(uow=in_memory_uow)
@@ -706,12 +655,9 @@ async def test__get_attendance_not_found_raises_error(
 @pytest.mark.asyncio
 async def test__get_attendance_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     existing = Attendance.create(
         id=uuid4(),
@@ -720,7 +666,7 @@ async def test__get_attendance_wrong_owner_raises_error(
         date=PAST_DATE,
         status=AttendanceStatus.PRESENT,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = GetAttendanceUseCase(uow=in_memory_uow)
     cmd = GetAttendanceCommand(
@@ -741,12 +687,9 @@ async def test__get_attendance_wrong_owner_raises_error(
 async def test__list_attendance_by_date_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     a1 = Attendance.create(
@@ -756,7 +699,7 @@ async def test__list_attendance_by_date_happy_path(
         date=PAST_DATE,
         status=AttendanceStatus.PRESENT,
     )
-    await in_memory_attendance_repo.add(a1)
+    await in_memory_uow.attendance.add(a1)
 
     use_case = ListAttendanceByDateUseCase(uow=in_memory_uow)
     cmd = ListAttendanceByDateCommand(
@@ -775,12 +718,9 @@ async def test__list_attendance_by_date_happy_path(
 async def test__list_attendance_by_date_filters_by_status(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     other_emp = Employee.create(
@@ -794,7 +734,7 @@ async def test__list_attendance_by_date_filters_by_status(
         working_hours_per_day=Decimal("8.0"),
         overtime_multiplier=Decimal("1.5"),
     )
-    await in_memory_employee_repo.add(other_emp)
+    await in_memory_uow.employees.add(other_emp)
 
     a1 = Attendance.create(
         id=uuid4(),
@@ -810,8 +750,8 @@ async def test__list_attendance_by_date_filters_by_status(
         date=PAST_DATE,
         status=AttendanceStatus.PAID_LEAVE,
     )
-    await in_memory_attendance_repo.add(a1)
-    await in_memory_attendance_repo.add(a2)
+    await in_memory_uow.attendance.add(a1)
+    await in_memory_uow.attendance.add(a2)
 
     use_case = ListAttendanceByDateUseCase(uow=in_memory_uow)
     cmd = ListAttendanceByDateCommand(
@@ -831,9 +771,8 @@ async def test__list_attendance_by_date_filters_by_status(
 async def test__list_attendance_by_date_returns_empty_when_none(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = ListAttendanceByDateUseCase(uow=in_memory_uow)
@@ -851,9 +790,8 @@ async def test__list_attendance_by_date_returns_empty_when_none(
 @pytest.mark.asyncio
 async def test__list_attendance_by_date_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = ListAttendanceByDateUseCase(uow=in_memory_uow)
     cmd = ListAttendanceByDateCommand(
@@ -873,12 +811,9 @@ async def test__list_attendance_by_date_wrong_owner_raises_error(
 async def test__list_attendance_by_employee_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     for day in [1, 2, 3]:
@@ -889,7 +824,7 @@ async def test__list_attendance_by_employee_happy_path(
             date=date(2026, 6, day),
             status=AttendanceStatus.PRESENT,
         )
-        await in_memory_attendance_repo.add(a)
+        await in_memory_uow.attendance.add(a)
 
     use_case = ListAttendanceByEmployeeUseCase(uow=in_memory_uow)
     cmd = ListAttendanceByEmployeeCommand(
@@ -909,12 +844,9 @@ async def test__list_attendance_by_employee_happy_path(
 async def test__list_attendance_by_employee_date_range_filter(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     for day in [1, 2, 3, 4, 5]:
@@ -925,7 +857,7 @@ async def test__list_attendance_by_employee_date_range_filter(
             date=date(2026, 6, day),
             status=AttendanceStatus.PRESENT,
         )
-        await in_memory_attendance_repo.add(a)
+        await in_memory_uow.attendance.add(a)
 
     use_case = ListAttendanceByEmployeeUseCase(uow=in_memory_uow)
     cmd = ListAttendanceByEmployeeCommand(
@@ -947,12 +879,9 @@ async def test__list_attendance_by_employee_date_range_filter(
 async def test__list_attendance_by_employee_status_filter(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     for day, status in [
@@ -967,7 +896,7 @@ async def test__list_attendance_by_employee_status_filter(
             date=date(2026, 6, day),
             status=status,
         )
-        await in_memory_attendance_repo.add(a)
+        await in_memory_uow.attendance.add(a)
 
     use_case = ListAttendanceByEmployeeUseCase(uow=in_memory_uow)
     cmd = ListAttendanceByEmployeeCommand(
@@ -987,9 +916,8 @@ async def test__list_attendance_by_employee_status_filter(
 async def test__list_attendance_by_employee_not_found_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = ListAttendanceByEmployeeUseCase(uow=in_memory_uow)
@@ -1006,11 +934,9 @@ async def test__list_attendance_by_employee_not_found_raises_error(
 @pytest.mark.asyncio
 async def test__list_attendance_by_employee_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = ListAttendanceByEmployeeUseCase(uow=in_memory_uow)
     cmd = ListAttendanceByEmployeeCommand(
@@ -1030,11 +956,9 @@ async def test__list_attendance_by_employee_wrong_owner_raises_error(
 async def test__bulk_mark_attendance_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = BulkMarkAttendanceUseCase(uow=in_memory_uow)
@@ -1063,12 +987,9 @@ async def test__bulk_mark_attendance_happy_path(
 async def test__bulk_mark_attendance_overwrites_existing(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -1079,7 +1000,7 @@ async def test__bulk_mark_attendance_overwrites_existing(
         status=AttendanceStatus.PRESENT,
         overtime_hours=Decimal("1.0"),
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = BulkMarkAttendanceUseCase(uow=in_memory_uow)
     cmd = BulkMarkAttendanceCommand(
@@ -1106,11 +1027,9 @@ async def test__bulk_mark_attendance_overwrites_existing(
 async def test__bulk_mark_attendance_holiday_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = BulkMarkAttendanceUseCase(uow=in_memory_uow)
@@ -1133,11 +1052,9 @@ async def test__bulk_mark_attendance_holiday_raises_error(
 async def test__bulk_mark_attendance_future_date_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = BulkMarkAttendanceUseCase(uow=in_memory_uow)
@@ -1160,12 +1077,10 @@ async def test__bulk_mark_attendance_future_date_raises_error(
 async def test__bulk_mark_attendance_inactive_employee_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    employee = in_memory_employee_repo._items[0]
+    employee = in_memory_uow.employees._items[0]
     employee.deactivate()
 
     use_case = BulkMarkAttendanceUseCase(uow=in_memory_uow)
@@ -1187,11 +1102,9 @@ async def test__bulk_mark_attendance_inactive_employee_raises_error(
 @pytest.mark.asyncio
 async def test__bulk_mark_attendance_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
 
     use_case = BulkMarkAttendanceUseCase(uow=in_memory_uow)
     cmd = BulkMarkAttendanceCommand(
@@ -1216,10 +1129,8 @@ async def test__bulk_mark_attendance_wrong_owner_raises_error(
 async def test__mark_all_present_happy_path(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAllPresentUseCase(uow=in_memory_uow)
@@ -1242,12 +1153,10 @@ async def test__mark_all_present_happy_path(
 async def test__mark_all_present_no_active_employees_returns_empty(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
-    in_memory_employee_repo._items[0].deactivate()
+    in_memory_uow.employees._items[0].deactivate()
 
     use_case = MarkAllPresentUseCase(uow=in_memory_uow)
     cmd = MarkAllPresentCommand(
@@ -1265,9 +1174,8 @@ async def test__mark_all_present_no_active_employees_returns_empty(
 async def test__mark_all_present_holiday_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAllPresentUseCase(uow=in_memory_uow)
@@ -1285,9 +1193,8 @@ async def test__mark_all_present_holiday_raises_error(
 async def test__mark_all_present_future_date_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAllPresentUseCase(uow=in_memory_uow)
@@ -1305,12 +1212,9 @@ async def test__mark_all_present_future_date_raises_error(
 async def test__mark_all_present_overwrites_existing(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
-    in_memory_attendance_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     existing = Attendance.create(
@@ -1320,7 +1224,7 @@ async def test__mark_all_present_overwrites_existing(
         date=PAST_DATE,
         status=AttendanceStatus.PAID_LEAVE,
     )
-    await in_memory_attendance_repo.add(existing)
+    await in_memory_uow.attendance.add(existing)
 
     use_case = MarkAllPresentUseCase(uow=in_memory_uow)
     cmd = MarkAllPresentCommand(
@@ -1338,9 +1242,8 @@ async def test__mark_all_present_overwrites_existing(
 @pytest.mark.asyncio
 async def test__mark_all_present_wrong_owner_raises_error(
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
 
     use_case = MarkAllPresentUseCase(uow=in_memory_uow)
     cmd = MarkAllPresentCommand(
@@ -1362,11 +1265,9 @@ async def test__mark_all_present_wrong_owner_raises_error(
 async def test__mark_attendance_on_weekly_off_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAttendanceUseCase(uow=in_memory_uow)
@@ -1388,13 +1289,11 @@ async def test__mark_attendance_on_weekly_off_raises_error(
 async def test__mark_attendance_on_specific_week_weekly_off_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     """business_defaults has the 2nd Tuesday as weekly off.
     June 9, 2026 is the 2nd Tuesday of June."""
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
     second_tuesday = date(2026, 6, 9)  # 2nd Tuesday of June 2026
 
@@ -1415,12 +1314,10 @@ async def test__mark_attendance_on_specific_week_weekly_off_raises_error(
 async def test__mark_attendance_on_non_weekly_off_tuesday_succeeds(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
     """The 3rd Tuesday of June (June 16) is NOT a weekly off — only the 2nd is."""
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
     third_tuesday = date(2026, 6, 16)  # 3rd Tuesday of June 2026
 
@@ -1443,11 +1340,9 @@ async def test__mark_attendance_on_non_weekly_off_tuesday_succeeds(
 async def test__bulk_mark_attendance_on_weekly_off_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
-    in_memory_employee_repo,
 ):
-    business = in_memory_business_repo._items[0]
-    employee = in_memory_employee_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
+    employee = in_memory_uow.employees._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = BulkMarkAttendanceUseCase(uow=in_memory_uow)
@@ -1470,9 +1365,8 @@ async def test__bulk_mark_attendance_on_weekly_off_raises_error(
 async def test__mark_all_present_on_weekly_off_raises_error(
     business_defaults,
     in_memory_uow,
-    in_memory_business_repo,
 ):
-    business = in_memory_business_repo._items[0]
+    business = in_memory_uow.businesses._items[0]
     owner_id = business_defaults["owner_id"]
 
     use_case = MarkAllPresentUseCase(uow=in_memory_uow)
