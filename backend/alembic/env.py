@@ -3,23 +3,12 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from app.attendance.infrastructure.orm import (
-    AttendanceModel,  # noqa: F401 - ensure models are imported for Alembic's autogenerate
-)
-from app.business.infrastructure.orm import (  # noqa: F401 - ensure models are imported for Alembic's autogenerate
+from app.businesses.infrastructure.models import (  # noqa: F401 - ensure models are imported for Alembic's autogenerate
     BusinessModel,
-    BusinessWeeklyOffRuleModel,
+    WeeklyOffRuleModel,
 )
 from app.core.config import get_settings
 from app.core.db import Base
-from app.employees.infrastructure.orm import EmployeeModel  # noqa: F401
-from app.holidays.infrastructure.orm import (
-    HolidayModel,  # noqa: F401 - ensure models are imported for Alembic's autogenerate
-)
-from app.payroll.infrastructure.orm import (  # noqa: F401
-    PayrollLineItemModel,
-    PayrollRunModel,
-)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
