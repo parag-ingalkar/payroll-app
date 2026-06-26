@@ -9,6 +9,7 @@ from app.businesses.infrastructure.models import (  # noqa: F401 - ensure models
 )
 from app.core.config import get_settings
 from app.core.db import Base
+from app.holidays.infrastructure.models import HolidayModel  # noqa: F401 - ensure models are imported for Alembic's autogenerate
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

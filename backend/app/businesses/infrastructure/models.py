@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 
+from app.holidays.infrastructure.models import HolidayModel
 from sqlalchemy import (
     CheckConstraint,
     Enum,
@@ -46,6 +47,14 @@ class BusinessModel(Base):
 
     weekly_off_rules: Mapped[list["WeeklyOffRuleModel"]] = relationship(
         "WeeklyOffRuleModel",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+
+    holidays: Mapped[list["HolidayModel"]] = relationship(
+        "HolidayModel",
         back_populates="business",
         cascade="all, delete-orphan",
         passive_deletes=True,
