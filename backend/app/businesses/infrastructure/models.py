@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 
+from app.employees.infrastructure.models import EmployeeModel
 from app.holidays.infrastructure.models import HolidayModel
 from sqlalchemy import (
     CheckConstraint,
@@ -55,6 +56,14 @@ class BusinessModel(Base):
 
     holidays: Mapped[list["HolidayModel"]] = relationship(
         "HolidayModel",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+
+    employees: Mapped[list["EmployeeModel"]] = relationship(
+        "EmployeeModel",
         back_populates="business",
         cascade="all, delete-orphan",
         passive_deletes=True,

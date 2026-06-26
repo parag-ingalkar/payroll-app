@@ -3,13 +3,14 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from app.businesses.infrastructure.models import (  # noqa: F401 - ensure models are imported for Alembic's autogenerate
+from app.businesses.infrastructure.models import (  # noqa: F401
     BusinessModel,
     WeeklyOffRuleModel,
 )
 from app.core.config import get_settings
 from app.core.db import Base
-from app.holidays.infrastructure.models import HolidayModel  # noqa: F401 - ensure models are imported for Alembic's autogenerate
+from app.holidays.infrastructure.models import HolidayModel  # noqa: F401
+from app.employees.infrastructure.models import EmployeeModel  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
