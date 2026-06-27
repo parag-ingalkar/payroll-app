@@ -100,8 +100,8 @@ class Business:
 
     def is_weekly_off(self, date: date) -> bool:
         # Get the abbreviated weekday name and convert to lowercase
-        weekday = date.strftime("%a").lower()
-        return any(rule.weekday == weekday for rule in self.weekly_off_rules)
+        weekday = date.strftime("%A").lower()
+        return any(rule.weekday.lower() == weekday for rule in self.weekly_off_rules)
 
     @classmethod
     def create(

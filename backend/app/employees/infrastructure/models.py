@@ -13,7 +13,7 @@ from app.core.db import Base
 from app.employees.domain.entities import Employee
 
 if TYPE_CHECKING:
-    # from app.attendance.infrastructure.orm import AttendanceModel
+    from app.attendances.infrastructure.models import AttendanceModel
     from app.businesses.infrastructure.models import BusinessModel
 
 
@@ -56,11 +56,11 @@ class EmployeeModel(Base):
 
     business: Mapped["BusinessModel"] = relationship(back_populates="employees")
 
-    # attendance: Mapped[list["AttendanceModel"]] = relationship(
-    #     back_populates="employee",
-    #     cascade="all, delete-orphan",
-    #     passive_deletes=True,
-    # )
+    attendances: Mapped[list["AttendanceModel"]] = relationship(
+        back_populates="employee",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     @classmethod
     def from_entity(cls, employee: Employee) -> "EmployeeModel":
