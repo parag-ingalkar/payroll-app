@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from app.attendances.infrastructure.models import AttendanceModel  # noqa: F401
 from app.businesses.infrastructure.models import (  # noqa: F401
     BusinessModel,
     WeeklyOffRuleModel,

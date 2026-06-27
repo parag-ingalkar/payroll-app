@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 
+from app.attendances.infrastructure.models import AttendanceModel
 from app.employees.infrastructure.models import EmployeeModel
 from app.holidays.infrastructure.models import HolidayModel
 from sqlalchemy import (
@@ -64,6 +65,13 @@ class BusinessModel(Base):
 
     employees: Mapped[list["EmployeeModel"]] = relationship(
         "EmployeeModel",
+        back_populates="business",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        lazy="selectin",
+    )
+    attendances: Mapped[list["AttendanceModel"]] = relationship(
+        "AttendanceModel",
         back_populates="business",
         cascade="all, delete-orphan",
         passive_deletes=True,
