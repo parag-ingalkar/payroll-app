@@ -9,7 +9,6 @@ from app.shared.value_objects import SalaryBasis, WageType
 class CreateEmployeeCommand:
     business_id: UUID
     owner_id: str
-    id: UUID
     name: str
     designation: str | None
     wage_type: WageType | None

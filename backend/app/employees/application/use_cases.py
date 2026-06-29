@@ -53,7 +53,6 @@ class CreateEmployeeUseCase:
             )
 
             employee = Employee.create(
-                id=cmd.id,
                 business_id=cmd.business_id,
                 name=cmd.name,
                 designation=cmd.designation,
@@ -107,8 +106,7 @@ class GetEmployeeByIdUseCase:
             )
             if not employee:
                 raise EmployeeNotFoundError(
-                    business_id=str(cmd.business_id),
-                    employee_id=str(cmd.employee_id),
+                    f"Employee with id {cmd.employee_id} not found in business {cmd.business_id}."
                 )
             return employee
 
@@ -132,8 +130,7 @@ class UpdateEmployeeUseCase:
             )
             if not employee:
                 raise EmployeeNotFoundError(
-                    business_id=str(cmd.business_id),
-                    employee_id=str(cmd.employee_id),
+                    f"Employee with id {cmd.employee_id} not found in business {cmd.business_id}."
                 )
 
             kwargs = {}
@@ -178,8 +175,7 @@ class DeactivateEmployeeUseCase:
             )
             if not employee:
                 raise EmployeeNotFoundError(
-                    business_id=str(cmd.business_id),
-                    employee_id=str(cmd.employee_id),
+                    f"Employee with id {cmd.employee_id} not found in business {cmd.business_id}."
                 )
 
             if employee.is_active:
@@ -208,8 +204,7 @@ class ActivateEmployeeUseCase:
             )
             if not employee:
                 raise EmployeeNotFoundError(
-                    business_id=str(cmd.business_id),
-                    employee_id=str(cmd.employee_id),
+                    f"Employee with id {cmd.employee_id} not found in business {cmd.business_id}."
                 )
 
             if not employee.is_active:
@@ -238,8 +233,7 @@ class DeleteEmployeeUseCase:
             )
             if not employee:
                 raise EmployeeNotFoundError(
-                    business_id=str(cmd.business_id),
-                    employee_id=str(cmd.employee_id),
+                    f"Employee with id {cmd.employee_id} not found in business {cmd.business_id}."
                 )
 
             await uow.employees.delete(employee)

@@ -22,7 +22,6 @@ class Employee:
     @classmethod
     def create(
         cls,
-        id: UUID,
         business_id: UUID,
         name: str,
         designation: str | None,
@@ -37,7 +36,6 @@ class Employee:
             raise InvalidEmployeeNameError("Employee name cannot be empty.")
         stripped_designation = designation.strip() if designation else None
         return cls(
-            id=id,
             business_id=business_id,
             name=stripped_name,
             designation=stripped_designation or None,

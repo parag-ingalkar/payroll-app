@@ -2,6 +2,7 @@ from datetime import date
 from typing import Protocol, Iterable, Sequence
 from uuid import UUID
 
+from app.attendances.domain.value_objects import AttendanceSummary
 from app.shared.value_objects import AttendanceStatus
 from app.attendances.domain.entities import Attendance
 
@@ -66,3 +67,12 @@ class AttendanceRepositoryPort(Protocol):
         entries: Iterable[Attendance],
         marked_by: str | None,
     ) -> None: ...
+
+    # Summary of attendance for a single employee in a period defined by range for payroll calculation
+    async def get_attendance_summary_for_employees(
+        self,
+        *,
+        business_id: UUID,
+        period_start_date: date,
+        period_end_date: date,
+    ) -> dict[UUID, "AttendanceSummary"]: ...

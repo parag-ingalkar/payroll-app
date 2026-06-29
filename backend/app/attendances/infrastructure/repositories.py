@@ -1,10 +1,12 @@
 from collections.abc import Sequence
 from datetime import date
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Iterable
 from uuid import UUID
 
-from sqlalchemy import select, delete, extract
+from app.attendances.domain.value_objects import AttendanceSummary
+from sqlalchemy import Numeric, case, cast, distinct, func, select, delete, extract
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -160,3 +162,133 @@ class SqlAttendanceRepository(AttendanceRepositoryPort):
             )
         )
         await self.session.execute(stmt)
+async def get_attendance_summary_for_employees(
+    self,
+    *,
+    business_id: UUID,
+    period_start_date: date,
+    period_end_date: date,
+    employee_ids: Sequence[UUID] | None = None,
+) -> dict[UUID, "AttendanceSummary"]:
+    A = AttendanceModel
+    zero = Decimal("0.00")
+    one = Decimal("1.00")
+
+    stmt = (
+        select(
+            A.employee_id.label("employee_id"),
+            func.array_agg(distinct(A.date)).label("attendance_days"),
+            cast(
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (A.status == AttendanceStatus.PRESENT, one),
+                            else_=zero,
+                        )
+                    ),
+                    zero,
+                ),
+                Numeric(10, 2),
+            ).label("present_days"),
+            cast(
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (A.status == AttendanceStatus.HALF_DAY, one),
+                            else_=zero,
+                        )
+                    ),
+                    zero,
+                ),
+                Numeric(10, 2),
+            ).label("half_days"),
+            cast(
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (A.status == AttendanceStatus.PAID_LEAVE, one),
+                            else_=zero,
+                        )
+                    ),
+                    zero,
+                ),
+                Numeric(10, 2),
+            ).label("paid_leave_days"),
+            cast(
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (A.status == AttendanceStatus.UNPAID_LEAVE, one),
+                            else_=zero,
+                        )
+                    ),
+                    zero,
+                ),
+                Numeric(10, 2),
+            ).label("unpaid_leave_days"),
+
+            cast(
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (A.status == AttendanceStatus.PAID_HOLIDAY, one),
+                            else_=zero,
+                        )
+                    ),
+                    zero,
+                ),
+                Numeric(10, 2),
+            ).label("paid_holiday_days"),
+            cast(
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (A.status == AttendanceStatus.UNPAID_HOLIDAY, one),
+                            else_=zero,
+                        )
+                    ),
+                    zero,
+                ),
+                Numeric(10, 2),
+            ).label("unpaid_holiday_days"),
+            cast(
+                func.coalesce(func.sum(A.overtime_hours), zero),
+                Numeric(10, 2),
+            ).label("overtime_hours"),
+            cast(
+                func.coalesce(func.sum(A.total_hours), zero),
+                Numeric(10, 2),
+            ).label("total_worked_hours"),
+        )
+        .where(
+            A.business_id == business_id,
+            A.date >= period_start_date,
+            A.date <= period_end_date,
+        )
+        .group_by(A.employee_id)
+    )
+
+    if employee_ids:
+        stmt = stmt.where(A.employee_id.in_(employee_ids))
+
+    result = await self.session.execute(stmt)
+    rows = result.all()
+
+    summaries: dict[UUID, AttendanceSummary] = {}
+    for row in rows:
+        summaries[row.employee_id] = AttendanceSummary(
+            employee_id=row.employee_id,
+            period_start_date=period_start_date,
+            period_end_date=period_end_date,
+            attendance_days=set(row.attendance_days or []),
+            present_days=row.present_days,
+            half_days=row.half_days,
+            paid_leave_days=row.paid_leave_days,
+            unpaid_leave_days=row.unpaid_leave_days,
+            paid_holiday_days=row.paid_holiday_days,
+            unpaid_holiday_days=row.unpaid_holiday_days,
+            overtime_hours=row.overtime_hours,
+            total_worked_hours=row.total_worked_hours,
+        )
+
+    return summaries

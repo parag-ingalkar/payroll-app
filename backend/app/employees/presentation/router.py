@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -51,7 +51,6 @@ async def create_employee(
     use_case: CreateEmployeeUseCase = Depends(get_create_employee_use_case),
 ) -> EmployeeRead:
     cmd = CreateEmployeeCommand(
-        id=uuid4(),
         business_id=business_id,
         owner_id=current_user.clerk_user_id,
         name=payload.name,

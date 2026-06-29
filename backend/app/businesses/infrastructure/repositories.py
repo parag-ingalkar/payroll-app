@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from uuid import UUID
+from app.businesses.domain.value_objects import BusinessPayrollConfiguration
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.businesses.domain.entities import Business, WeeklyOffRule
@@ -74,3 +75,29 @@ class SqlBusinessRepository(BusinessRepositoryPort):
                     weekday=rule.weekday,
                 )
             )
+
+    async def get_business_payroll_configuration(
+        self,
+        *,
+        business_id: UUID,
+    ) -> BusinessPayrollConfiguration:
+        # Fetch the business to get payroll_start_date
+        result = await self.session.execute(
+            select(BusinessModel).where(BusinessModel.id == str(business_id))
+        )
+        business_model = result.scalar_one_or_none()
+        if not business_model:
+            raise ValueError(f"Business with id {business_id} not found.")
+
+        weekly_off_rules_models = business_model.weekly_off_rules
+
+        weekly_off_rules = [
+            WeeklyOffRule(weekday=rule_model.weekday, id=rule_model.id)
+            for rule_model in weekly_off_rules_models
+        ]
+
+        return BusinessPayrollConfiguration(
+            business_id=business_id,
+            payroll_start_day=business_model.payroll_start_day,
+            weekly_off_rules=weekly_off_rules,
+        )
